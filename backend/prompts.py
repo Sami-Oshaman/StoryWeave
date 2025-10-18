@@ -31,17 +31,19 @@ def calculate_sentence_count(minutes, profile_type):
     words_per_minute = {
         "adhd": 80,      # Slower due to short sentences
         "autism": 100,   # Moderate pace
-        "anxiety": 90    # Slower, calming pace
+        "anxiety": 90,   # Slower, calming pace
+        "general": 120   # Standard reading pace
     }
 
     avg_words_per_sentence = {
         "adhd": 6,       # Very short sentences
         "autism": 12,    # Medium sentences
-        "anxiety": 15    # Longer, flowing sentences
+        "anxiety": 15,   # Longer, flowing sentences
+        "general": 14    # Natural variation
     }
 
-    total_words = words_per_minute.get(profile_type, 90) * minutes
-    sentence_count = total_words // avg_words_per_sentence.get(profile_type, 12)
+    total_words = words_per_minute.get(profile_type, 100) * minutes
+    sentence_count = total_words // avg_words_per_sentence.get(profile_type, 14)
 
     return max(sentence_count, 20)  # Minimum 20 sentences
 
@@ -155,10 +157,49 @@ Example opening style: "In a cozy little garden, everything was peaceful and saf
 Generate the complete story now, following these requirements exactly."""
 
 
+def get_general_prompt(age, theme, interests, story_length):
+    """Generate prompt for general audience with maximum creative freedom"""
+    sentence_count = calculate_sentence_count(story_length, "general")
+    theme_elements = ", ".join(THEMES.get(theme, THEMES["adventure"])["elements"])
+    interest_list = ", ".join(interests) if interests else "adventures and fun activities"
+
+    return f"""Create a bedtime story for a {age}-year-old child. You have complete creative freedom to write in whatever style feels natural and engaging.
+
+CREATIVE FREEDOM:
+- Write in any style that feels right for the story
+- Use your natural storytelling voice - let the narrative flow organically
+- Vary sentence length and structure as the story demands
+- Include dialogue, description, action, or reflection as you see fit
+- No structural restrictions - tell the story however you envision it
+- Total story should be approximately {sentence_count} sentences, but this is flexible
+
+CONTENT GUIDELINES:
+- Age-appropriate for {age} years old (no profanity or inappropriate content)
+- Theme: {theme}
+- Incorporate these elements naturally: {theme_elements}
+- Child's interests: {interest_list}
+- Suitable for bedtime (should end on a peaceful, calm note)
+
+YOUR CREATIVE CONTROL:
+You may:
+- Use any narrative perspective (first person, third person, etc.)
+- Include humor, wonder, gentle excitement, or calm reflection
+- Create memorable characters with distinct personalities
+- Use metaphors, similes, vivid imagery, or simple language
+- Build tension and release it (age-appropriately)
+- Write in a classic fairy tale style, modern prose, or anything in between
+- Let the story flow naturally without worrying about rigid formulas
+
+The only requirements are: age-appropriate content, incorporate the theme and interests, and end peacefully for bedtime.
+
+Write the complete story now with your full creative expression."""
+
+
 PROFILE_PROMPTS = {
     "adhd": get_adhd_prompt,
     "autism": get_autism_prompt,
-    "anxiety": get_anxiety_prompt
+    "anxiety": get_anxiety_prompt,
+    "general": get_general_prompt
 }
 
 
@@ -167,7 +208,7 @@ def build_prompt(profile_type, age, theme, interests, story_length):
     Build the complete prompt for story generation
 
     Args:
-        profile_type: 'adhd', 'autism', or 'anxiety'
+        profile_type: 'adhd', 'autism', 'anxiety', or 'general'
         age: child's age (number)
         theme: story theme (string)
         interests: list of interests (list of strings)
@@ -237,5 +278,19 @@ Willow snuggled into the warm, soft grass. "I am safe. I am loved. All is well."
 
 The stars came out one by one, like friends saying goodnight.
 Willow closed her eyes, feeling warm and peaceful. Everything was safe.
-Sweet dreams, Willow. You are loved. The end."""
+Sweet dreams, Willow. You are loved. The end.""",
+
+    "general": """Once upon a time, in a magical forest filled with twinkling fireflies, a young fox named Oliver discovered something extraordinary hidden beneath the old oak tree.
+
+It was a glowing acorn, shimmering with starlight. Oliver picked it up carefully and noticed it felt warm and gentle in his paws. "What could this be?" he wondered aloud.
+
+As he held the acorn, the forest around him began to sparkle. The trees whispered ancient stories, and the flowers hummed soft lullabies. Oliver realized this was a wishing acorn, one that only appeared once in a hundred years.
+
+Oliver thought carefully about his wish. He could wish for anything—treasure, adventure, or magical powers. But as he looked around at the peaceful forest, his friends sleeping in their cozy homes, he knew exactly what to wish for.
+
+"I wish for sweet dreams for everyone in the forest tonight," Oliver whispered to the acorn. The acorn glowed brighter, then gently dissolved into a thousand tiny sparkles that floated up into the night sky, becoming new stars.
+
+Oliver smiled and made his way home to his warm den. As he curled up in his soft bed of leaves, he felt happy knowing that everyone would have wonderful dreams tonight.
+
+The stars twinkled overhead, the moon smiled down, and Oliver closed his eyes. Sweet dreams, Oliver. The end."""
 }

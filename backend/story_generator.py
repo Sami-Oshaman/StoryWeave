@@ -18,12 +18,12 @@ bedrock_runtime = boto3.client(
     region_name=os.environ.get('AWS_REGION', 'us-west-2')
 )
 
-# Model configuration
+# Model configuration - Claude 4.x Series using Inference Profiles
 MODEL_TIERS = {
-    'cheap': os.environ.get('AWS_BEDROCK_MODEL_CHEAP', 'mistral.mistral-7b-instruct-v0:2'),
-    'medium': os.environ.get('AWS_BEDROCK_MODEL_MEDIUM', 'meta.llama3-1-8b-instruct-v1:0'),
-    'demo': os.environ.get('AWS_BEDROCK_MODEL_DEMO', 'anthropic.claude-3-haiku-20240307-v1:0'),
-    'quality': os.environ.get('AWS_BEDROCK_MODEL_QUALITY', 'anthropic.claude-3-5-sonnet-20241022-v2:0')
+    'cheap': os.environ.get('AWS_BEDROCK_MODEL_CHEAP', 'anthropic.claude-haiku-4-5-20251001-v1:0'),
+    'medium': os.environ.get('AWS_BEDROCK_MODEL_MEDIUM', 'arn:aws:bedrock:us-west-2:296062573602:inference-profile/us.anthropic.claude-sonnet-4-5-20250929-v1:0'),
+    'quality': os.environ.get('AWS_BEDROCK_MODEL_QUALITY', 'arn:aws:bedrock:us-west-2:296062573602:inference-profile/us.anthropic.claude-sonnet-4-5-20250929-v1:0'),
+    'expensive': os.environ.get('AWS_BEDROCK_MODEL_EXPENSIVE', 'anthropic.claude-opus-4-1-20250805-v1:0')
 }
 
 
@@ -56,44 +56,19 @@ def generate_story(prompt, max_tokens=None, temperature=None):
     model_id = get_model_id()
 
     try:
-        # Prepare request body based on model type
-        if 'anthropic' in model_id:
-            # Claude models use Messages API
-            body = json.dumps({
-                "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": max_tokens,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                "temperature": temperature,
-                "top_p": 0.9
-            })
-        elif 'mistral' in model_id:
-            # Mistral models
-            body = json.dumps({
-                "prompt": prompt,
-                "max_tokens": max_tokens,
-                "temperature": temperature,
-                "top_p": 0.9
-            })
-        elif 'meta' in model_id:
-            # Llama models
-            body = json.dumps({
-                "prompt": prompt,
-                "max_gen_len": max_tokens,
-                "temperature": temperature,
-                "top_p": 0.9
-            })
-        else:
-            # Generic format
-            body = json.dumps({
-                "prompt": prompt,
-                "max_tokens": max_tokens,
-                "temperature": temperature
-            })
+        # Claude models use Messages API
+        # Note: Claude 4.x models don't allow both temperature and top_p
+        body = json.dumps({
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": max_tokens,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "temperature": temperature
+        })
 
         # Call Bedrock
         response = bedrock_runtime.invoke_model(
@@ -106,21 +81,8 @@ def generate_story(prompt, max_tokens=None, temperature=None):
         # Parse response
         response_body = json.loads(response['body'].read())
 
-        # Extract story text based on model type
-        if 'anthropic' in model_id:
-            story_text = response_body['content'][0]['text']
-        elif 'mistral' in model_id:
-            story_text = response_body['outputs'][0]['text']
-        elif 'meta' in model_id:
-            story_text = response_body['generation']
-        else:
-            # Try common response formats
-            story_text = (
-                response_body.get('completion') or
-                response_body.get('text') or
-                response_body.get('generation') or
-                str(response_body)
-            )
+        # Extract story text from Claude response
+        story_text = response_body['content'][0]['text']
 
         logger.info(f"Story generated successfully ({len(story_text)} chars)")
 

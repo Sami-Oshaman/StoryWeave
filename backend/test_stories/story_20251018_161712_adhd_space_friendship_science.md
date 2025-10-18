@@ -1,0 +1,150 @@
+# StoryWeave Generated Story
+
+## Metadata
+
+- **Profile:** ADHD
+- **Age:** 12
+- **Theme:** space friendship science
+- **Interests:** rockets astronauts stars planets the martian project hail mary interstellar
+- **Length:** 5 minutes
+- **Model:** `arn:aws:bedrock:us-west-2:296062573602:inference-profile/us.anthropic.claude-sonnet-4-5-20250929-v1:0`
+- **Generated:** 2025-10-18T16:17:12.986739
+
+## Prompt
+
+```
+Generate a bedtime story for a 12-year-old child with ADHD. Use these specific guidelines:
+
+STRUCTURE REQUIREMENTS:
+- Very short sentences (5-7 words maximum per sentence)
+- Frequent paragraph breaks (every 2-3 sentences)
+- Total of approximately 66 sentences
+- Story gradually slows from high energy to calm
+
+LANGUAGE STYLE:
+- Action-oriented verbs (jump, run, fly, discover, zoom, blast)
+- "Surprise" moments or hooks every 2-3 sentences to re-engage attention
+- Direct questions to the reader (e.g., "What do you think happened next?")
+- Concrete rewards or achievements for the main character
+- NO long descriptive passages
+
+THEME & CONTENT:
+- Theme: space friendship science
+- Include these elements: path, bridge, garden, treehouse, meadow, hill
+- Child's interests: rockets astronauts stars planets the martian project hail mary interstellar
+
+PACING:
+- Start with HIGH energy and excitement
+- Gradually become CALMER toward the end
+- End with peaceful, sleep-ready language
+
+Example opening style: "Max saw a rocket. It was shiny and red. 'Wow!' he said."
+
+Generate the complete story now, following these requirements exactly.
+```
+
+## Story
+
+# The Rocket Garden
+
+Max saw a rocket in his backyard. It was shiny and silver. "Wow!" he said.
+
+The rocket door opened with a WHOOSH! A robot waved at him. "Come aboard, Max!"
+
+Max jumped inside super fast. The controls were glowing bright blue. "Where are we going?" he asked.
+
+"To Mars!" said the robot. The engines roared to life. They blasted off into space!
+
+Stars zoomed past the window. Max felt like Mark Watney. What do you think he saw?
+
+A purple planet appeared ahead. It had rings made of ice. "Let's land there!" Max shouted.
+
+They touched down on soft ground. Max opened the hatch door. He stepped onto an alien world!
+
+A glowing path stretched before him. It sparkled with star dust. "Follow me," said the robot.
+
+The path led to a crystal bridge. It floated above a purple canyon. Max ran across it carefully.
+
+On the other side was something amazing. Can you guess what it was? A garden filled with rocket plants!
+
+Tiny rockets grew on silver vines. They hummed and glowed softly. "These are rocket seeds," explained the robot.
+
+Max picked one carefully. It felt warm in his hand. "What does it do?" he asked.
+
+"Plant it and see!" said the robot. Max found good soil quickly. He dug a small hole.
+
+He planted the rocket seed deep. Water appeared from nowhere. The ground started to shake!
+
+A treehouse shot up from the ground! It had windows shaped like stars. "Whoa!" Max climbed up fast.
+
+Inside was a telescope. Max looked through it right away. He saw Jupiter up close!
+
+The Great Red Spot was spinning. Moons orbited all around it. "This is so cool!" Max said.
+
+But wait—something was moving out there. A spaceship was heading their way! Was it friendly or not?
+
+The ship landed near the treehouse. A door slid open slowly. Out stepped a kid from Mars!
+
+"Hi! I'm Zara," she said. She had silver hair and smiled. "Want to explore together?"
+
+"Yes!" Max climbed down quickly. Zara showed him her jet boots. They both zoomed into the air!
+
+They flew over a meadow below. It glowed with bioluminescent flowers. The flowers hummed a gentle song.
+
+"This meadow grows food for astronauts," Zara explained. Max landed to touch one. It felt like soft velvet.
+
+They picked some glowing berries together. The berries tasted like starlight. "These give you energy," said Zara.
+
+Max earned an astronaut badge then. Zara pinned it on his shirt. He felt so proud and happy.
+
+"One more place to visit," Zara said. She pointed to a distant hill. "The Friendship Observatory is there."
+
+They walked up the hill together. The path was lined with moonflowers. The flowers opened as they passed.
+
+At the top stood a dome. It was made of clear glass. Inside were thousands of star maps.
+
+"Every astronaut adds their star here," Zara said. She handed Max a glowing marker. "Choose your own special star."
+
+Max found a bright yellow one. He drew a circle around it. "That's mine now," he said softly.
+
+The robot appeared with warm drinks. They tasted like vanilla and honey. Max sipped his drink slowly.
+
+They sat on soft cushions together. The dome showed constellations above them. Zara pointed out her favorites.
+
+"That's Orion," she said quietly. "And there's the Big Dipper." Max's eyes grew a bit heavy.
+
+The stars seemed to twinkle gently. They made patterns in the darkness. Max felt very calm now.
+
+"Time to go home," whispered Zara. She gave Max a hug. "Come back anytime, friend."
+
+Max climbed into his rocket again. The robot started the engines softly. They lifted off very gently.
+
+The purple planet grew smaller below. Max waved goodbye through the window. His new badge glowed warmly.
+
+The rocket flew through quiet space. Stars drifted past like snowflakes. Max yawned a big yawn.
+
+Earth appeared ahead, blue and green. His backyard came into view. The rocket landed without a sound.
+
+Max stepped onto his grass. Everything was peaceful and still. The moon shone bright above.
+
+He looked at his astronaut badge. It still glowed faintly. "What an amazing adventure," he whispered.
+
+Max walked to his house slowly. His bed looked so cozy. He climbed under the soft blankets.
+
+He closed his eyes gently. He could still see the stars. They twinkled in his dreams.
+
+His rocket seed was in his pocket. Tomorrow he would plant it. But tonight, he would rest.
+
+Max smiled as he drifted off. He dreamed of space and friendship. Everything was calm and peaceful.
+
+The stars watched over him kindly. The moon sent gentle light. Max slept deeply and well.
+
+Goodnight, young astronaut. Sleep tight.
+
+## Statistics
+
+- Characters: 4501
+- Words: 779
+- Sentences: 150
+- Paragraphs: 48
+- Average sentence length: 5.2 words

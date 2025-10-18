@@ -57,7 +57,7 @@ def get_ttl_timestamp(hours=24):
 
 def validate_profile_type(profile_type):
     """
-    Validate cognitive profile type
+    Validate profile type
 
     Args:
         profile_type: Profile type string
@@ -65,7 +65,7 @@ def validate_profile_type(profile_type):
     Returns:
         bool: True if valid
     """
-    valid_profiles = ['adhd', 'autism', 'anxiety']
+    valid_profiles = ['adhd', 'autism', 'anxiety', 'general']
     return profile_type in valid_profiles
 
 
@@ -96,26 +96,6 @@ def validate_age(age):
     return isinstance(age, int) and 3 <= age <= 12
 
 
-def sanitize_input(text, max_length=100):
-    """
-    Sanitize user input text
-
-    Args:
-        text: Input text
-        max_length: Maximum allowed length
-
-    Returns:
-        Sanitized text
-    """
-    if not isinstance(text, str):
-        return ""
-
-    # Remove any potential injection characters
-    sanitized = text.strip()[:max_length]
-
-    return sanitized
-
-
 def format_error_response(error_message, status_code=400):
     """
     Format a consistent error response
@@ -128,16 +108,3 @@ def format_error_response(error_message, status_code=400):
         tuple of (dict, int)
     """
     return {"error": error_message}, status_code
-
-
-def format_success_response(data):
-    """
-    Format a consistent success response
-
-    Args:
-        data: Response data dict
-
-    Returns:
-        dict
-    """
-    return data

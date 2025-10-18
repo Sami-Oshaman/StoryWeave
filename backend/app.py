@@ -17,7 +17,6 @@ load_dotenv()
 from database import (
     get_cached_story,
     save_cached_story,
-    update_cache_access_count,
     save_profile,
     get_profile,
     save_story,
@@ -91,7 +90,7 @@ def generate_story_endpoint():
 
         # Validate profile type
         if not validate_profile_type(data['profile_type']):
-            return format_error_response("Invalid profile_type. Must be 'adhd', 'autism', or 'anxiety'")
+            return format_error_response("Invalid profile_type. Must be 'adhd', 'autism', 'anxiety', or 'general'")
 
         # Validate age
         if not validate_age(data['age']):
@@ -110,13 +109,9 @@ def generate_story_endpoint():
         if cached_story:
             logger.info(f"Cache hit for key: {cache_key}")
 
-            # Update access count
-            update_cache_access_count(cache_key)
-
             return jsonify({
-                "story_id": cached_story.get('story_id', generate_uuid()),
-                "story_text": cached_story['story_text'],
-                "profile_used": cached_story['profile_type'],
+                "story_id": generate_uuid(),
+                "story_text": cached_story['story'],
                 "cached": True,
                 "generation_time": 0
             })
@@ -157,40 +152,27 @@ def generate_story_endpoint():
         # Save to story history
         child_id = data.get('child_id', 'anonymous')
 
-        story_doc = {
-            "story_id": story_id,
-            "child_id": child_id,
-            "story_text": result["story"],
-            "profile_used": data['profile_type'],
-            "theme": data['theme'],
-            "generation_parameters": {
-                "age": data['age'],
-                "interests": data.get('interests', []),
-                "story_length": data['story_length']
-            },
-            "timestamp": timestamp,
-            "generation_time": Decimal(str(generation_time))  # DynamoDB requires Decimal
-        }
-
         try:
-            save_story(story_doc)
+            save_story(
+                child_id=child_id,
+                story_text=result["story"],
+                profile_type=data['profile_type'],
+                theme=data['theme'],
+                age=data['age'],
+                interests=data.get('interests', []),
+                story_length=data['story_length']
+            )
         except Exception as e:
             logger.error(f"Failed to save story to history: {str(e)}")
             # Continue anyway - story generation succeeded
 
         # Cache the story
-        cache_doc = {
-            "cache_key": cache_key,
-            "story_id": story_id,
-            "story_text": result["story"],
-            "profile_type": data['profile_type'],
-            "created_at": timestamp,
-            "access_count": 1,
-            "expires_at": get_ttl_timestamp(24)  # 24 hours TTL
-        }
-
         try:
-            save_cached_story(cache_doc)
+            save_cached_story(
+                cache_key=cache_key,
+                story_text=result["story"],
+                expires_at=get_ttl_timestamp(24)  # 24 hour TTL
+            )
         except Exception as e:
             logger.error(f"Failed to cache story: {str(e)}")
             # Continue anyway - story was generated successfully

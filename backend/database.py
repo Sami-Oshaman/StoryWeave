@@ -141,9 +141,24 @@ def get_profile(child_id):
         return None
 
 
-def save_story(story_data):
+def save_story(child_id, story_text, profile_type, theme, age, interests, story_length):
     """Save a story to DynamoDB"""
+    from utils import generate_uuid, get_current_timestamp
+    from decimal import Decimal
+
     table = get_table('stories')
+    story_data = {
+        'story_id': generate_uuid(),
+        'child_id': child_id,
+        'story': story_text,
+        'profile_type': profile_type,
+        'theme': theme,
+        'age': age,
+        'interests': interests,
+        'story_length': Decimal(str(story_length)),
+        'timestamp': get_current_timestamp()
+    }
+
     try:
         table.put_item(Item=story_data)
         logger.info(f"Story saved: {story_data['story_id']}")
@@ -181,29 +196,23 @@ def get_cached_story(cache_key):
         return None
 
 
-def save_cached_story(cache_data):
+def save_cached_story(cache_key, story_text, expires_at):
     """Save a story to cache"""
     table = get_table('cache')
+    cache_data = {
+        'cache_key': cache_key,
+        'story': story_text,
+        'expires_at': expires_at,
+        'access_count': 0
+    }
+
     try:
         table.put_item(Item=cache_data)
-        logger.info(f"Story cached: {cache_data['cache_key']}")
+        logger.info(f"Story cached: {cache_key}")
         return True
     except ClientError as e:
         logger.error(f"Error caching story: {str(e)}")
         return False
-
-
-def update_cache_access_count(cache_key):
-    """Increment access count for cached story"""
-    table = get_table('cache')
-    try:
-        table.update_item(
-            Key={'cache_key': cache_key},
-            UpdateExpression='SET access_count = access_count + :inc',
-            ExpressionAttributeValues={':inc': 1}
-        )
-    except ClientError as e:
-        logger.warning(f"Could not update access count: {str(e)}")
 
 
 if __name__ == "__main__":
