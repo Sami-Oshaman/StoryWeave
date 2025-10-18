@@ -1,0 +1,237 @@
+# ================================
+# CRITICAL: API Keys & Secrets
+# ================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+secrets.json
+config/secrets.py
+aws_credentials.json
+
+# MongoDB connection strings
+mongodb_config.py
+database_secrets.py
+
+# AWS Bedrock credentials
+aws_config.py
+bedrock_api_key.txt
+
+# ================================
+# Python/Flask Backend
+# ================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+backend/venv/
+backend/env/
+
+# Flask specific
+instance/
+.webassets-cache
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# ================================
+# Node.js/React Frontend
+# ================================
+# Dependencies
+node_modules/
+frontend/node_modules/
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Production build
+/build
+/dist
+frontend/build/
+frontend/dist/
+
+# React specific
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js (if used instead of CRA)
+.next/
+out/
+
+# Package manager locks (keep one, ignore others)
+# Uncomment the one you're NOT using:
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ================================
+# IDEs and Editors
+# ================================
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ================================
+# Operating System Files
+# ================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+
+# ================================
+# Logs
+# ================================
+*.log
+logs/
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pip-log.txt
+
+# ================================
+# Database
+# ================================
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# MongoDB local
+data/db/
+mongodb_data/
+
+# ================================
+# Deployment & CI/CD
+# ================================
+# Vercel
+.vercel
+
+# Railway
+.railway/
+
+# Heroku
+.heroku/
+
+# Docker
+*.dockerignore
+docker-compose.override.yml
+
+# ================================
+# Hackathon Specific
+# ================================
+# Cached stories (backup)
+cached_stories.json
+story_cache/
+
+# Demo materials (optional - might want to keep these)
+# demo_recordings/
+# pitch_deck_draft.pptx
+
+# Test data
+test_profiles.json
+sample_data/
+
+# Jupyter notebooks (if used for testing)
+.ipynb_checkpoints/
+*.ipynb
+
+# ================================
+# Temporary Files
+# ================================
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+.cache/
+
+# ================================
+# Documentation (optional)
+# ================================
+# Uncomment if you don't want to commit these:
+# *.pdf
+# *.docx
+# *.pptx

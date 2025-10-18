@@ -1,0 +1,22 @@
+
+
+## **Project Structure This Assumes**
+```
+storyweave/
+├── .gitignore          
+├── .env                
+├── .env.example        
+├── README.md
+├── backend/
+│   ├── app.py
+│   ├── requirements.txt
+│   ├── venv/          
+│   └── __pycache__/   
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   ├── node_modules/  
+│   ├── build/         
+│   └── package.json
+└── docs/
+    └── pitch_deck.pdf
