@@ -26,10 +26,9 @@ boto3==1.34.28
 botocore==1.34.28
 
 # ================================
-# MongoDB
+# DynamoDB (via boto3 above)
 # ================================
-pymongo==4.6.1
-dnspython==2.4.2  # Required for MongoDB SRV connection strings
+# DynamoDB is included in boto3 - no additional packages needed
 
 # ================================
 # JSON & Data Handling

@@ -117,6 +117,8 @@ The core value proposition is in the prompt templates. Each cognitive profile ha
 
 ## Database Schema (DynamoDB)
 
+**Note:** All DynamoDB tables must be created before running the application. See Environment Configuration section for setup instructions.
+
 **StoryWeave-Profiles Table:**
 - `child_id` (partition key): UUID
 - `age`: number
@@ -136,12 +138,13 @@ The core value proposition is in the prompt templates. Each cognitive profile ha
 - `timestamp`: datetime
 - `user_rating`: number (optional)
 
-**Story Cache Collection:**
-- `cache_key`: MD5 hash of generation parameters
+**Story Cache Table:**
+- `cache_key` (partition key): MD5 hash of generation parameters
 - `story_text`: string
 - `profile_type`: string
-- `created_at`: datetime
+- `created_at`: datetime (ISO 8601 string)
 - `access_count`: number
+- `expires_at`: number (Unix timestamp for TTL)
 
 ## Error Handling Strategy
 
