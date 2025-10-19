@@ -64,7 +64,7 @@ def validate_profile_type(profile_type):
     Returns:
         bool: True if valid
     """
-    valid_profiles = ['adhd', 'autism', 'anxiety', 'general']
+    valid_profiles = ['adhd', 'autism', 'anxiety', 'general', 'neurotypical']
     return profile_type in valid_profiles
 
 

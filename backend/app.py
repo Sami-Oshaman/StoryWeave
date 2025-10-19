@@ -285,7 +285,7 @@ def generate_story_endpoint():
 
         # Validate profile type
         if not validate_profile_type(data['profile_type']):
-            return format_error_response("Invalid profile_type. Must be 'adhd', 'autism', 'anxiety', or 'general'")
+            return format_error_response("Invalid profile_type. Must be 'adhd', 'autism', 'anxiety', 'general', or 'neurotypical'")
 
         # Validate age
         if not validate_age(data['age']):
@@ -311,7 +311,8 @@ def generate_story_endpoint():
             age=data['age'],
             theme=data['theme'],
             interests=data.get('interests', []),
-            story_length=data['story_length']
+            story_length=data['story_length'],
+            demo_mode=data.get('demo_mode', False)
         )
 
         generation_time = (datetime.now() - start_time).total_seconds()

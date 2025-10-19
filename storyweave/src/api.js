@@ -95,6 +95,11 @@ const mapProfileType = (conditions) => {
     return 'general';
   }
 
+  // Check for neurotypical first
+  if (conditions.some(c => c.toLowerCase().includes('neurotypical'))) {
+    return 'neurotypical';
+  }
+
   // Priority: ADHD > Autism > Anxiety
   if (conditions.some(c => c.toLowerCase().includes('adhd'))) {
     return 'adhd';
@@ -193,7 +198,8 @@ export const generateStory = async (profile, storyParams, imageConfig = null) =>
       interests: interests.length > 0 ? interests : ['adventure', 'friendship'],
       child_id: profile.child_id, // Include if available from profile creation
       generate_images: imageConfig?.enabled || false,
-      pages_per_image: imageConfig?.pagesPerImage || 4
+      pages_per_image: imageConfig?.pagesPerImage || 4,
+      demo_mode: storyParams.demoMode || false
     };
 
     console.log('Generating story with params:', requestBody);

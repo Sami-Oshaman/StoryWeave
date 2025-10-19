@@ -153,7 +153,7 @@ def generate_story_with_retry(prompt, profile_type, max_retries=3):
     }
 
 
-def create_story(profile_type, age, theme, interests, story_length):
+def create_story(profile_type, age, theme, interests, story_length, demo_mode=False):
     """
     High-level function to create a story
 
@@ -163,13 +163,14 @@ def create_story(profile_type, age, theme, interests, story_length):
         theme: story theme
         interests: list of interests
         story_length: length in minutes
+        demo_mode: If True, generate a short demo story (1-2 min, ~15 slides)
 
     Returns:
         dict with 'success' and 'story' keys
     """
     try:
         # Build the prompt
-        prompt = build_prompt(profile_type, age, theme, interests, story_length)
+        prompt = build_prompt(profile_type, age, theme, interests, story_length, demo_mode)
         logger.info(f"Creating {profile_type} story for age {age}, theme: {theme}")
 
         # Generate with retry

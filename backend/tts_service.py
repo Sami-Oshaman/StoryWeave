@@ -17,69 +17,64 @@ if not ELEVENLABS_API_KEY:
 
 client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
 
+# Available narrator voices - randomly selected for variety
+NARRATOR_VOICES = [
+    "dAcds2QMcvmv86jQMC3Y",  # Jayce
+    "RKCbSROXui75bk1SVpy8",  # Shaun
+    "7p1Ofvcwsv7UBPoFNcpI",  # Julian
+    "L1aJrPa7pLJEyYlh3Ilq",  # Oliver
+]
+
 # Voice mapping based on mood and theme for children's stories
-# Using ElevenLabs premium natural-sounding voices
+# Now using random selection from narrator pool
 VOICE_PROFILES = {
     # Calm, gentle voices
     "calm": {
-        "default": "pNInz6obpgDQGcFmaJgB",  # Bill - warm, natural storytelling voice
-        "space": "29vD33N1CtxCmqQRPOHJ",    # Drew - calm, soothing narrator
-        "animals": "pNInz6obpgDQGcFmaJgB",  # Bill - gentle for animal stories
-        "adventure": "oWAxZDx7w5VEj9dCyTzz", # Grace - soft, expressive
+        "default": None,  # Will be randomly selected
+        "space": None,
+        "animals": None,
+        "adventure": None,
     },
     # Playful, energetic voices
     "playful": {
-        "default": "AZnzlk1XvdvUeBnXmlld",  # Domi - bright, cheerful, young-sounding
-        "space": "VR6AewLTigWG4xSOukaG",    # Arnold - enthusiastic, clear
-        "animals": "AZnzlk1XvdvUeBnXmlld",  # Domi - fun, animated
-        "adventure": "ErXwobaYiN019PkySvjV",  # Antoni - energetic storyteller
+        "default": None,
+        "space": None,
+        "animals": None,
+        "adventure": None,
     },
     # Curious, wondering voices
     "curious": {
-        "default": "oWAxZDx7w5VEj9dCyTzz", # Grace - curious, warm
-        "space": "VR6AewLTigWG4xSOukaG",    # Arnold - scientific wonder
-        "animals": "21m00Tcm4TlvDq8ikWAM",  # Rachel - gentle curiosity
-        "adventure": "oWAxZDx7w5VEj9dCyTzz", # Grace - exploratory
+        "default": None,
+        "space": None,
+        "animals": None,
+        "adventure": None,
     },
     # Brave, confident voices
     "brave": {
-        "default": "29vD33N1CtxCmqQRPOHJ",  # Drew - strong, confident
-        "space": "VR6AewLTigWG4xSOukaG",    # Arnold - heroic explorer
-        "animals": "ErXwobaYiN019PkySvjV",  # Antoni - brave adventurer
-        "adventure": "ErXwobaYiN019PkySvjV", # Antoni - courageous hero
+        "default": None,
+        "space": None,
+        "animals": None,
+        "adventure": None,
     },
 }
 
 def select_voice(mood="calm", theme=""):
     """
-    Select the most appropriate voice based on story mood and theme
+    Randomly select a narrator voice from the available pool
 
     Args:
-        mood (str): Story mood (calm, playful, curious, brave)
-        theme (str): Story theme/genre (space, animals, adventure, etc.)
+        mood (str): Story mood (calm, playful, curious, brave) - currently not used, all random
+        theme (str): Story theme/genre - currently not used, all random
 
     Returns:
         str: Voice ID to use for narration
     """
-    mood = mood.lower() if mood else "calm"
-    theme_key = None
+    import random
 
-    # Normalize theme to match our categories
-    theme_lower = theme.lower() if theme else ""
-    if "space" in theme_lower or "rocket" in theme_lower or "planet" in theme_lower:
-        theme_key = "space"
-    elif "animal" in theme_lower or "forest" in theme_lower or "jungle" in theme_lower:
-        theme_key = "animals"
-    elif "adventure" in theme_lower or "quest" in theme_lower or "journey" in theme_lower:
-        theme_key = "adventure"
+    # Randomly select from narrator voices for variety
+    voice_id = random.choice(NARRATOR_VOICES)
 
-    # Get voice profile for mood
-    mood_profile = VOICE_PROFILES.get(mood, VOICE_PROFILES["calm"])
-
-    # Select voice based on theme, or use default for this mood
-    voice_id = mood_profile.get(theme_key, mood_profile["default"])
-
-    logger.info(f"Selected voice for mood='{mood}', theme='{theme}': {voice_id}")
+    logger.info(f"Randomly selected narrator voice: {voice_id}")
     return voice_id
 
 def generate_audio(text, voice_id=None, mood="calm", theme=""):

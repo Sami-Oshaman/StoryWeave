@@ -23,11 +23,27 @@ THEMES = {
 }
 
 
-def calculate_sentence_count(minutes, profile_type):
+def calculate_sentence_count(minutes, profile_type, demo_mode=False):
     """
     Convert story length in minutes to approximate sentence count
     based on reading speed and profile type
+
+    Args:
+        minutes: Target story length in minutes
+        profile_type: Cognitive profile type
+        demo_mode: If True, generate a very short demo story (1-2 min, ~15 slides)
     """
+    # Map neurotypical to general for calculations
+    if profile_type == 'neurotypical':
+        profile_type = 'general'
+
+    # Demo mode: target 1.5 minutes regardless of profile
+    if demo_mode:
+        # Calculate for ~1.5 minutes to ensure we stay under 2 min
+        minutes = 1.5
+        # Return a fixed count that results in ~15 slides
+        return 15
+
     words_per_minute = {
         "adhd": 80,      # Slower due to short sentences
         "autism": 100,   # Moderate pace
@@ -48,9 +64,9 @@ def calculate_sentence_count(minutes, profile_type):
     return max(sentence_count, 20)  # Minimum 20 sentences
 
 
-def get_adhd_prompt(age, theme, interests, story_length):
+def get_adhd_prompt(age, theme, interests, story_length, demo_mode=False):
     """Generate ADHD-specific prompt"""
-    sentence_count = calculate_sentence_count(story_length, "adhd")
+    sentence_count = calculate_sentence_count(story_length, "adhd", demo_mode)
     theme_elements = ", ".join(THEMES.get(theme, THEMES["adventure"])["elements"])
     interest_list = ", ".join(interests) if interests else "exciting adventures"
 
@@ -84,9 +100,9 @@ Example opening style: "Max saw a rocket. It was shiny and red. 'Wow!' he said."
 Generate the complete story now, following these requirements exactly."""
 
 
-def get_autism_prompt(age, theme, interests, story_length):
+def get_autism_prompt(age, theme, interests, story_length, demo_mode=False):
     """Generate Autism-specific prompt"""
-    sentence_count = calculate_sentence_count(story_length, "autism")
+    sentence_count = calculate_sentence_count(story_length, "autism", demo_mode)
     theme_elements = ", ".join(THEMES.get(theme, THEMES["adventure"])["elements"])
     interest_list = ", ".join(interests) if interests else "familiar, comforting things"
 
@@ -120,9 +136,9 @@ Example opening style: "First, Luna put on her space helmet. It was blue, just l
 Generate the complete story now, following these requirements exactly."""
 
 
-def get_anxiety_prompt(age, theme, interests, story_length):
+def get_anxiety_prompt(age, theme, interests, story_length, demo_mode=False):
     """Generate Anxiety-specific prompt"""
-    sentence_count = calculate_sentence_count(story_length, "anxiety")
+    sentence_count = calculate_sentence_count(story_length, "anxiety", demo_mode)
     theme_elements = ", ".join(THEMES.get(theme, THEMES["adventure"])["elements"])
     interest_list = ", ".join(interests) if interests else "peaceful, comforting things"
 
@@ -157,9 +173,9 @@ Example opening style: "In a cozy little garden, everything was peaceful and saf
 Generate the complete story now, following these requirements exactly."""
 
 
-def get_general_prompt(age, theme, interests, story_length):
+def get_general_prompt(age, theme, interests, story_length, demo_mode=False):
     """Generate prompt for general audience with maximum creative freedom"""
-    sentence_count = calculate_sentence_count(story_length, "general")
+    sentence_count = calculate_sentence_count(story_length, "general", demo_mode)
     theme_elements = ", ".join(THEMES.get(theme, THEMES["adventure"])["elements"])
     interest_list = ", ".join(interests) if interests else "adventures and fun activities"
 
@@ -195,6 +211,67 @@ The only requirements are: age-appropriate content, incorporate the theme and in
 Write the complete story now with your full creative expression."""
 
 
+def get_fairy_tale_mix_prompt(profile_type, age, story_length, demo_mode=False):
+    """Generate prompt for fairy tale mixing when theme/characters are empty"""
+    sentence_count = calculate_sentence_count(story_length, profile_type, demo_mode)
+
+    # Profile-specific instructions
+    profile_instructions = {
+        "adhd": """
+ADHD-SPECIFIC REQUIREMENTS:
+- Very short sentences (5-7 words maximum per sentence)
+- Frequent paragraph breaks (every 2-3 sentences)
+- Story gradually slows from high energy to calm
+- Action-oriented verbs and frequent hooks
+- NO long descriptive passages""",
+
+        "autism": """
+AUTISM-SPECIFIC REQUIREMENTS:
+- Clear "First-Then-Finally" structure (use these transition words)
+- Concrete, literal language ONLY (NO metaphors or idioms)
+- Predictable story arc with NO sudden surprises
+- Repetitive comforting phrases
+- Characters behave consistently and logically""",
+
+        "anxiety": """
+ANXIETY-SPECIFIC REQUIREMENTS:
+- Gentle, reassuring tone throughout
+- Repetitive calming phrases (e.g., "everything is safe," "you are loved")
+- Breathing cues embedded naturally
+- NO conflict, danger, or uncertainty
+- Focus on comfort, security, and safety""",
+
+        "general": """
+CREATIVE FREEDOM:
+- Write in your natural storytelling voice
+- Vary sentence length and structure as feels right
+- Include dialogue, description, action as you see fit
+- Let the narrative flow organically"""
+    }
+
+    profile_specific = profile_instructions.get(profile_type, profile_instructions["general"])
+
+    return f"""Create a magical bedtime story for a {age}-year-old child by blending elements from classic fairy tales in a fresh, creative way.
+
+FAIRY TALE MIXING INSTRUCTIONS:
+- Draw inspiration from beloved fairy tales like Cinderella, Little Red Riding Hood, Jack and the Beanstalk, The Three Little Pigs, Goldilocks, Sleeping Beauty, etc.
+- Mix and match characters, settings, or plot elements in unexpected ways
+- Create something NEW and UNIQUE - not just retelling one fairy tale
+- Examples of mixing: Red Riding Hood helps the Three Little Pigs build a house, Cinderella discovers Jack's beanstalk, Goldilocks visits Sleeping Beauty's castle
+- Keep the magic and wonder of classic tales while creating something fresh
+
+STORY REQUIREMENTS:
+- Approximately {sentence_count} sentences total
+- Age-appropriate for {age} years old
+- End on a peaceful, calm note suitable for bedtime
+{profile_specific}
+
+YOUR CREATIVE TASK:
+Blend the best elements of classic fairy tales into an original, enchanting bedtime story. Make it magical, memorable, and perfect for sweet dreams.
+
+Write the complete story now."""
+
+
 PROFILE_PROMPTS = {
     "adhd": get_adhd_prompt,
     "autism": get_autism_prompt,
@@ -203,26 +280,39 @@ PROFILE_PROMPTS = {
 }
 
 
-def build_prompt(profile_type, age, theme, interests, story_length):
+def build_prompt(profile_type, age, theme, interests, story_length, demo_mode=False):
     """
     Build the complete prompt for story generation
 
     Args:
-        profile_type: 'adhd', 'autism', 'anxiety', or 'general'
+        profile_type: 'adhd', 'autism', 'anxiety', 'general', or 'neurotypical'
         age: child's age (number)
         theme: story theme (string)
         interests: list of interests (list of strings)
         story_length: minutes (number)
+        demo_mode: If True, generate a short demo story (1-2 min, ~15 slides)
 
     Returns:
         Complete prompt string
     """
+    # Map neurotypical to general
+    if profile_type == 'neurotypical':
+        profile_type = 'general'
+
+    # Check if theme and interests are empty or minimal
+    is_theme_empty = not theme or theme.strip() == '' or theme.lower() == 'adventure'
+    is_interests_empty = not interests or len(interests) == 0 or (len(interests) == 1 and interests[0].strip() == '')
+
+    # If both are empty, use fairy tale mixing mode
+    if is_theme_empty and is_interests_empty:
+        return get_fairy_tale_mix_prompt(profile_type, age, story_length, demo_mode)
+
     prompt_func = PROFILE_PROMPTS.get(profile_type)
 
     if not prompt_func:
         raise ValueError(f"Invalid profile type: {profile_type}")
 
-    return prompt_func(age, theme, interests, story_length)
+    return prompt_func(age, theme, interests, story_length, demo_mode)
 
 
 # Fallback stories for each profile (used when API fails)

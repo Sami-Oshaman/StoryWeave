@@ -271,7 +271,7 @@ const ProfileSetup = ({ onComplete, user, existingProfile = null }) => {
               Help us adapt the story structure for your child
             </p>
             <div className="space-y-3">
-              {['ADHD', 'Autism Spectrum', 'Anxiety', 'Sensory Processing Disorder'].map((condition) => (
+              {['ADHD', 'Autism Spectrum', 'Anxiety', 'Sensory Processing Disorder', 'Neurotypical'].map((condition) => (
                 <label key={condition} className="flex items-start gap-3 cursor-pointer group">
                   <input
                     type="checkbox"
@@ -363,7 +363,8 @@ const StoryGenerator = ({ profile, onGenerate, onEditProfile, onViewHistory, use
     length: 'medium',
     genre: '',
     characters: '',
-    mood: 'calm'
+    mood: 'calm',
+    demoMode: false
   });
 
   const handleGenerate = async () => {
@@ -502,6 +503,23 @@ const StoryGenerator = ({ profile, onGenerate, onEditProfile, onViewHistory, use
               onChange={(e) => setStoryParams({...storyParams, characters: e.target.value})}
               className="w-full px-4 py-3 text-base bg-white/5 border-2 border-purple-700 rounded-xl focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-white placeholder-purple-400"
             />
+          </div>
+
+          {/* Demo Mode Checkbox */}
+          <div className="flex items-center gap-3 p-4 bg-purple-700/30 rounded-xl border border-purple-600/50">
+            <input
+              type="checkbox"
+              id="demoMode"
+              checked={storyParams.demoMode}
+              onChange={(e) => setStoryParams({...storyParams, demoMode: e.target.checked})}
+              className="w-5 h-5 border-2 border-purple-600 bg-white/5 checked:bg-purple-600 focus:ring-2 focus:ring-purple-500/20 cursor-pointer rounded"
+            />
+            <label htmlFor="demoMode" className="text-base text-purple-100 cursor-pointer flex items-center gap-2">
+              <span>Demo Mode</span>
+              <span className="px-2 py-0.5 bg-purple-600 text-purple-200 rounded text-xs">
+                Quick 1-2 min story
+              </span>
+            </label>
           </div>
 
           <button
@@ -671,7 +689,25 @@ const StoryDisplay = ({ story, profile, onBack, onNewStory, storyParams }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
   const [loadingAudio, setLoadingAudio] = useState(false);
+  const [isFlipping, setIsFlipping] = useState(false);
+  const [selectedVoiceId, setSelectedVoiceId] = useState(null);
   const audioRef = useRef(null);
+
+  // Select a random voice once when the story loads
+  React.useEffect(() => {
+    // Available narrator voices
+    const narratorVoices = [
+      "dAcds2QMcvmv86jQMC3Y",  // Jayce
+      "RKCbSROXui75bk1SVpy8",  // Shaun
+      "7p1Ofvcwsv7UBPoFNcpI",  // Julian
+      "L1aJrPa7pLJEyYlh3Ilq",  // Oliver
+    ];
+
+    // Randomly select one voice for the entire story
+    const randomVoice = narratorVoices[Math.floor(Math.random() * narratorVoices.length)];
+    setSelectedVoiceId(randomVoice);
+    console.log('Selected narrator voice for story:', randomVoice);
+  }, []); // Empty dependency array means this runs once on mount
 
   // Parse story into pages
   const pages = React.useMemo(() => {
@@ -701,6 +737,9 @@ const StoryDisplay = ({ story, profile, onBack, onNewStory, storyParams }) => {
     const playAudioForPage = async () => {
       if (pages.length === 0) return;
 
+      // Wait for voice to be selected before generating audio
+      if (!selectedVoiceId) return;
+
       // Stop current audio
       if (audioRef.current) {
         audioRef.current.pause();
@@ -715,7 +754,8 @@ const StoryDisplay = ({ story, profile, onBack, onNewStory, storyParams }) => {
         const mood = storyParams?.mood || 'calm';
         const theme = storyParams?.genre || '';
 
-        const { audioUrl: newAudioUrl } = await generateAudio(textForTTS, mood, theme);
+        // Pass the selected voice ID to ensure consistency throughout the story
+        const { audioUrl: newAudioUrl } = await generateAudio(textForTTS, mood, theme, selectedVoiceId);
         setAudioUrl(newAudioUrl);
 
         // Create new audio element and auto-play
@@ -744,7 +784,7 @@ const StoryDisplay = ({ story, profile, onBack, onNewStory, storyParams }) => {
         audioRef.current.pause();
       }
     };
-  }, [currentPage, pages, storyParams]);
+  }, [currentPage, pages, storyParams, selectedVoiceId]);
 
   const togglePlayPause = () => {
     if (!audioRef.current) return;
@@ -758,16 +798,18 @@ const StoryDisplay = ({ story, profile, onBack, onNewStory, storyParams }) => {
     }
   };
 
-  const nextPage = () => {
-    if (currentPage < pages.length - 1) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
+  const handlePageChange = (direction) => {
+    if (isFlipping) return;
 
-  const prevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage(currentPage - 1);
-    }
+    setIsFlipping(true);
+    setTimeout(() => {
+      if (direction === 'next' && currentPage < pages.length - 1) {
+        setCurrentPage(currentPage + 1);
+      } else if (direction === 'prev' && currentPage > 0) {
+        setCurrentPage(currentPage - 1);
+      }
+      setIsFlipping(false);
+    }, 600);
   };
 
   if (pages.length === 0) {
@@ -775,104 +817,169 @@ const StoryDisplay = ({ story, profile, onBack, onNewStory, storyParams }) => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8">
-      <div className="flex justify-between items-center mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 flex flex-col items-center justify-center p-8 gap-6">
+      {/* Back button and page counter */}
+      <div className="absolute top-8 left-8 z-20">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-purple-300 hover:text-purple-200 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-purple-800/80 hover:bg-purple-700 text-purple-100 rounded-lg backdrop-blur-sm transition-colors shadow-lg"
         >
           <ChevronLeft size={20} />
           New Story
         </button>
-        <span className="px-4 py-2 bg-purple-600 text-white rounded-full text-sm font-medium">
+      </div>
+
+      <div className="absolute top-24 right-8 z-20">
+        <span className="px-6 py-2 bg-purple-800/80 text-purple-100 rounded-lg backdrop-blur-sm font-serif text-lg shadow-lg">
           Page {currentPage + 1} of {pages.length}
         </span>
       </div>
 
-      {/* Story Display */}
-      <div className="bg-white/5 backdrop-blur-md rounded-3xl p-12 border border-purple-800/30 min-h-[500px] flex flex-col justify-center items-center relative mb-6">
-        <div className="text-center space-y-8">
-          {/* Image/Emoji Display */}
-          <div className="text-8xl mb-8">
-            {typeof pages[currentPage].image === 'string' && pages[currentPage].image.length < 10
-              ? pages[currentPage].image
-              : pages[currentPage].image?.image_data
-                ? <img src={`data:image/png;base64,${pages[currentPage].image.image_data}`} alt="Story illustration" className="max-w-md mx-auto rounded-xl" />
-                : pages[currentPage].image?.url
-                  ? <img src={pages[currentPage].image.url} alt="Story illustration" className="max-w-md mx-auto rounded-xl" />
-                  : '📖'
-            }
+      {/* Storybook */}
+      <div className="relative perspective-[2000px]" style={{ perspective: '2000px' }}>
+        <div className={`book-container transition-transform duration-600 ${isFlipping ? 'flipping' : ''}`}>
+          {/* Book Shadow */}
+          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-[90%] h-12 bg-black/50 blur-2xl rounded-full"></div>
+
+          {/* Book with darker brown border */}
+          <div className="relative flex shadow-2xl border-[12px] border-amber-950 rounded-sm" style={{
+            transformStyle: 'preserve-3d',
+            transform: 'rotateY(0deg)'
+          }}>
+            {/* Left Page */}
+            <div className="w-[500px] h-[750px] bg-gradient-to-br from-amber-50 to-amber-100 p-16 flex flex-col justify-between border-r-2 border-amber-300 shadow-inner relative"
+              style={{
+                backgroundImage: 'linear-gradient(to bottom right, rgba(255,251,235,1) 0%, rgba(254,243,199,1) 100%)',
+                boxShadow: 'inset -5px 0 15px -5px rgba(139,69,19,0.3)'
+              }}>
+              {/* Page texture */}
+              <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.3'/%3E%3C/svg%3E")`
+              }}></div>
+
+              {currentPage > 0 && (
+                <>
+                  {/* Image on left page */}
+                  <div className="flex-1 flex items-center justify-center">
+                    {typeof pages[currentPage - 1]?.image === 'string' && pages[currentPage - 1].image.length < 10
+                      ? <div className="text-9xl">{pages[currentPage - 1].image}</div>
+                      : pages[currentPage - 1]?.image?.image_data
+                        ? <img src={`data:image/png;base64,${pages[currentPage - 1].image.image_data}`} alt="Story illustration" className="max-w-full max-h-[550px] rounded-lg shadow-md" />
+                        : pages[currentPage - 1]?.image?.url
+                          ? <img src={pages[currentPage - 1].image.url} alt="Story illustration" className="max-w-full max-h-[550px] rounded-lg shadow-md" />
+                          : <div className="text-9xl">📖</div>
+                    }
+                  </div>
+
+                  {/* Page number bottom left */}
+                  <div className="text-center text-amber-700 font-serif text-sm mt-4">
+                    {currentPage}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Spine */}
+            <div className="w-4 bg-gradient-to-r from-amber-950 to-amber-900 shadow-lg"></div>
+
+            {/* Right Page */}
+            <div className="w-[500px] h-[750px] bg-gradient-to-bl from-amber-50 to-amber-100 p-16 flex flex-col justify-between shadow-inner relative"
+              style={{
+                backgroundImage: 'linear-gradient(to bottom left, rgba(255,251,235,1) 0%, rgba(254,243,199,1) 100%)',
+                boxShadow: 'inset 5px 0 15px -5px rgba(139,69,19,0.3)'
+              }}>
+              {/* Page texture */}
+              <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.3'/%3E%3C/svg%3E")`
+              }}></div>
+
+              {/* Story text on right page */}
+              <div className="flex-1 flex flex-col justify-center items-center px-4">
+                <p className="text-2xl leading-relaxed text-amber-900 font-serif text-center max-w-full" style={{
+                  hyphens: 'auto',
+                  wordSpacing: '0.1em',
+                  lineHeight: '1.8'
+                }}>
+                  {pages[currentPage].text}
+                </p>
+              </div>
+
+              {/* Page number bottom right */}
+              <div className="text-center text-amber-700 font-serif text-sm mt-4">
+                {currentPage + 1}
+              </div>
+            </div>
           </div>
 
-          {/* Story Text */}
-          <p className="text-2xl leading-relaxed text-purple-100 max-w-3xl mx-auto px-8">
-            {pages[currentPage].text}
-          </p>
-        </div>
-
-        {/* Navigation Arrows */}
-        <div className="absolute bottom-6 left-6 right-6 flex justify-between">
+          {/* Page Navigation Buttons - moved further from book */}
           <button
-            onClick={prevPage}
-            disabled={currentPage === 0}
-            className="p-3 rounded-xl bg-purple-600/50 hover:bg-purple-600 disabled:bg-purple-900/30 disabled:cursor-not-allowed transition-colors"
+            onClick={() => handlePageChange('prev')}
+            disabled={currentPage === 0 || isFlipping}
+            className="absolute left-0 top-1/2 -translate-y-1/2 p-4 rounded-full bg-purple-700/80 hover:bg-purple-600 disabled:bg-purple-900/30 disabled:cursor-not-allowed transition-colors text-purple-100 shadow-lg z-10"
+            style={{ transform: 'translateY(-50%) translateX(-180%)' }}
           >
-            <ChevronLeft size={32} />
+            <ChevronLeft size={36} />
           </button>
           <button
-            onClick={nextPage}
-            disabled={currentPage === pages.length - 1}
-            className="p-3 rounded-xl bg-purple-600/50 hover:bg-purple-600 disabled:bg-purple-900/30 disabled:cursor-not-allowed transition-colors"
+            onClick={() => handlePageChange('next')}
+            disabled={currentPage === pages.length - 1 || isFlipping}
+            className="absolute right-0 top-1/2 -translate-y-1/2 p-4 rounded-full bg-purple-700/80 hover:bg-purple-600 disabled:bg-purple-900/30 disabled:cursor-not-allowed transition-colors text-purple-100 shadow-lg z-10"
+            style={{ transform: 'translateY(-50%) translateX(180%)' }}
           >
-            <ChevronRight size={32} />
+            <ChevronRight size={36} />
           </button>
         </div>
       </div>
 
-      {/* Audio Controls */}
-      <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-purple-800/30 mb-4">
-        <div className="flex justify-center">
-          <button
-            onClick={togglePlayPause}
-            disabled={loadingAudio}
-            className="flex items-center gap-2 px-8 py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 text-white text-lg font-semibold rounded-xl transition-colors"
-          >
-            {loadingAudio ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                Loading...
-              </>
-            ) : isPlaying ? (
-              <>
-                <Pause size={20} />
-                Pause Audio
-              </>
-            ) : (
-              <>
-                <Play size={20} />
-                Play Audio
-              </>
-            )}
-          </button>
+      {/* Audio Controls - Below book (not absolute) */}
+      <div className="w-full max-w-lg mt-4">
+        <div className="bg-purple-800/80 backdrop-blur-md rounded-2xl p-6 border-2 border-purple-600 shadow-xl">
+          <div className="flex justify-center">
+            <button
+              onClick={togglePlayPause}
+              disabled={loadingAudio}
+              className="flex items-center gap-3 px-10 py-4 bg-purple-700 hover:bg-purple-600 disabled:bg-purple-900 text-purple-50 text-lg font-semibold rounded-xl transition-colors shadow-md"
+            >
+              {loadingAudio ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-purple-100/30 border-t-purple-100 rounded-full animate-spin"></div>
+                  Loading...
+                </>
+              ) : isPlaying ? (
+                <>
+                  <Pause size={24} />
+                  Pause Narration
+                </>
+              ) : (
+                <>
+                  <Play size={24} />
+                  Play Narration
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="mt-4 w-full h-3 bg-purple-900 rounded-full overflow-hidden shadow-inner">
+          <div
+            className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300 shadow-sm"
+            style={{ width: `${((currentPage + 1) / pages.length) * 100}%` }}
+          ></div>
         </div>
       </div>
 
-      {/* Progress Indicator */}
-      <div className="w-full h-2 bg-purple-900 rounded-full overflow-hidden mb-6">
-        <div
-          className="h-full bg-gradient-to-r from-purple-600 to-blue-600 transition-all duration-300"
-          style={{ width: `${((currentPage + 1) / pages.length) * 100}%` }}
-        ></div>
-      </div>
-
+      {/* End of story button */}
       {currentPage === pages.length - 1 && (
-        <button
-          onClick={onNewStory}
-          className="w-full py-4 px-6 bg-purple-600 hover:bg-purple-500 text-white text-xl font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-        >
-          <Sparkles size={20} />
-          Create Another Story
-        </button>
+        <div className="mt-4">
+          <button
+            onClick={onNewStory}
+            className="py-4 px-8 bg-purple-700 hover:bg-purple-600 text-purple-50 text-xl font-semibold rounded-xl transition-colors flex items-center justify-center gap-3 shadow-xl border-2 border-purple-600"
+          >
+            <Sparkles size={24} />
+            Create Another Story
+          </button>
+        </div>
       )}
     </div>
   );
