@@ -59,9 +59,9 @@ Stories are generated with fundamentally different structures based on disabilit
 
 **Core Technology:**
 - Python 3.9+
-- Flask 2.3+ (REST API)
+- Flask 3.0+ (REST API)
 - AWS Bedrock (Claude 3.5 Sonnet)
-- MongoDB Atlas (M0 free tier)
+- AWS DynamoDB (on-demand pricing)
 - Railway/Heroku deployment
 
 **API Endpoints:**
@@ -147,60 +147,64 @@ Response:
 
 **Key Backend Features:**
 - Cognitive adaptation engine with 2-3 disability profiles
-- Story caching system for common requests (Redis optional)
+- Story caching system for common requests
 - Error handling with retry logic (3 attempts)
 - Rate limiting for API protection (50 requests/hour per user)
 - Response time target: <3 seconds
 - Logging for debugging and analytics
 
-**Database Schema (MongoDB):**
+**Database Schema (DynamoDB):**
 
-```javascript
-// Child Profile Collection
+```python
+# StoryWeave-Profiles Table
+# Partition Key: child_id (String)
 {
-  "_id": ObjectId,
-  "child_id": "uuid",
-  "age": Number,
-  "cognitive_profile": ["adhd", "autism", "anxiety"],  // Can be multiple
+  "child_id": "uuid-string",  # Partition key
+  "age": 7,  # Number
+  "cognitive_profile": ["adhd", "autism"],  # List - can be multiple
   "sensory_preferences": {
-    "sound_sensitivity": String,  // "low", "medium", "high"
-    "visual_preference": String,  // "minimal", "moderate", "rich"
-    "texture_descriptions": Boolean,  // Include tactile descriptions
-    "avoid_triggers": [String]  // e.g., ["loud noises", "darkness"]
+    "sound_sensitivity": "medium",  # String: "low", "medium", "high"
+    "visual_preference": "moderate",  # String: "minimal", "moderate", "rich"
+    "texture_descriptions": True,  # Boolean - include tactile descriptions
+    "avoid_triggers": ["loud noises", "darkness"]  # List
   },
-  "interests": [String],  // e.g., ["dinosaurs", "space", "animals"]
-  "story_length_preference": Number,  // in minutes
-  "created_at": Date,
-  "updated_at": Date
+  "interests": ["dinosaurs", "space", "animals"],  # List
+  "story_length_preference": 10,  # Number (minutes)
+  "created_at": "2024-01-01T00:00:00Z",  # String (ISO 8601)
+  "updated_at": "2024-01-01T00:00:00Z"   # String (ISO 8601)
 }
 
-// Story History Collection
+# StoryWeave-Stories Table
+# Partition Key: story_id (String)
+# GSI: child_id-timestamp-index
+#   - Partition Key: child_id (String)
+#   - Sort Key: timestamp (String)
 {
-  "_id": ObjectId,
-  "story_id": "uuid",
-  "child_id": "uuid",
-  "story_text": String,
-  "profile_used": String,
-  "theme": String,
+  "story_id": "uuid-string",  # Partition key
+  "child_id": "uuid-string",  # GSI partition key
+  "story_text": "Once upon a time...",  # String
+  "profile_used": "adhd",  # String
+  "theme": "space",  # String
   "generation_parameters": {
-    "age": Number,
-    "interests": [String],
-    "story_length": Number
+    "age": 7,
+    "interests": ["rockets", "astronauts"],
+    "story_length": 10
   },
-  "audio_url": String,  // if TTS generated
-  "user_rating": Number,  // 1-5 stars, optional
-  "timestamp": Date
+  "audio_url": "https://...",  # String (optional, if TTS generated)
+  "user_rating": 5,  # Number (1-5 stars, optional)
+  "timestamp": "2024-01-01T00:00:00Z"  # String (ISO 8601) - GSI sort key
 }
 
-// Story Cache Collection (for performance)
+# Story Cache Table (for performance)
+# Partition Key: cache_key (String)
+# TTL attribute: expires_at
 {
-  "_id": ObjectId,
-  "cache_key": String,  // hash of generation parameters
-  "story_text": String,
-  "profile_type": String,
-  "created_at": Date,
-  "access_count": Number,
-  "expires_at": Date  // TTL index
+  "cache_key": "md5-hash-of-parameters",  # Partition key
+  "story_text": "Once upon a time...",  # String
+  "profile_type": "adhd",  # String
+  "created_at": "2024-01-01T00:00:00Z",  # String (ISO 8601)
+  "access_count": 42,  # Number
+  "expires_at": 1704153600  # Number (Unix timestamp for TTL)
 }
 ```
 
@@ -509,7 +513,7 @@ from botocore.exceptions import ClientError
 # Initialize Bedrock client
 bedrock_runtime = boto3.client(
     service_name='bedrock-runtime',
-    region_name='us-east-1'  # or your preferred region
+    region_name='us-west-2'  # Default region for this project
 )
 
 MODEL_ID = "anthropic.claude-3-5-sonnet-20241022-v2:0"
@@ -621,23 +625,25 @@ def handle_generation_error(error):
 ```python
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from pymongo import MongoClient
+import boto3
 import uuid
 from datetime import datetime
 import logging
+import os
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend
 
-# MongoDB setup
-MONGO_URI = os.environ.get("MONGODB_URI", "mongodb://localhost:27017/")
-client = MongoClient(MONGO_URI)
-db = client.storyweave
+# DynamoDB setup
+dynamodb = boto3.resource(
+    'dynamodb',
+    region_name=os.environ.get('AWS_REGION', 'us-west-2')
+)
 
-# Collections
-profiles = db.child_profiles
-stories = db.story_history
-cache = db.story_cache
+# Tables
+profiles_table = dynamodb.Table(os.environ.get('DYNAMODB_TABLE_PROFILES', 'StoryWeave-Profiles'))
+stories_table = dynamodb.Table(os.environ.get('DYNAMODB_TABLE_STORIES', 'StoryWeave-Stories'))
+cache_table = dynamodb.Table(os.environ.get('DYNAMODB_TABLE_CACHE', 'StoryWeave-Cache'))
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -658,16 +664,25 @@ def generate_story_endpoint():
         
         # Check cache first
         cache_key = create_cache_key(data)
-        cached_story = cache.find_one({"cache_key": cache_key})
-        
-        if cached_story:
-            logger.info(f"Cache hit for key: {cache_key}")
-            return jsonify({
-                "story_id": str(cached_story['_id']),
-                "story_text": cached_story['story_text'],
-                "profile_used": cached_story['profile_type'],
-                "cached": True
-            })
+        try:
+            cache_response = cache_table.get_item(Key={'cache_key': cache_key})
+            if 'Item' in cache_response:
+                cached_story = cache_response['Item']
+                logger.info(f"Cache hit for key: {cache_key}")
+                # Update access count
+                cache_table.update_item(
+                    Key={'cache_key': cache_key},
+                    UpdateExpression='SET access_count = access_count + :inc',
+                    ExpressionAttributeValues={':inc': 1}
+                )
+                return jsonify({
+                    "story_id": cached_story.get('story_id', str(uuid.uuid4())),
+                    "story_text": cached_story['story_text'],
+                    "profile_used": cached_story['profile_type'],
+                    "cached": True
+                })
+        except Exception as e:
+            logger.warning(f"Cache check failed: {str(e)}")
         
         # Build prompt
         prompt = build_prompt(
@@ -695,25 +710,27 @@ def generate_story_endpoint():
         story_id = str(uuid.uuid4())
         story_doc = {
             "story_id": story_id,
-            "child_id": data.get('child_id'),
+            "child_id": data.get('child_id', 'anonymous'),
             "story_text": result["story"],
             "profile_used": data['profile_type'],
             "theme": data['theme'],
             "generation_parameters": data,
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now().isoformat(),
             "generation_time": generation_time
         }
-        stories.insert_one(story_doc)
-        
-        # Cache the story
+        stories_table.put_item(Item=story_doc)
+
+        # Cache the story (with TTL of 24 hours)
         cache_doc = {
             "cache_key": cache_key,
+            "story_id": story_id,
             "story_text": result["story"],
             "profile_type": data['profile_type'],
-            "created_at": datetime.now(),
-            "access_count": 1
+            "created_at": datetime.now().isoformat(),
+            "access_count": 1,
+            "expires_at": int(datetime.now().timestamp()) + 86400  # 24 hours
         }
-        cache.insert_one(cache_doc)
+        cache_table.put_item(Item=cache_doc)
         
         logger.info(f"Story generated successfully in {generation_time:.2f}s")
         
@@ -736,8 +753,10 @@ def save_profile_endpoint():
     """
     try:
         data = request.json
-        
+
         child_id = str(uuid.uuid4())
+        now = datetime.now().isoformat()
+
         profile_doc = {
             "child_id": child_id,
             "age": data['age'],
@@ -745,17 +764,17 @@ def save_profile_endpoint():
             "sensory_preferences": data.get('sensory_preferences', {}),
             "interests": data.get('interests', []),
             "story_length_preference": data.get('story_length_preference', 10),
-            "created_at": datetime.now(),
-            "updated_at": datetime.now()
+            "created_at": now,
+            "updated_at": now
         }
-        
-        profiles.insert_one(profile_doc)
-        
+
+        profiles_table.put_item(Item=profile_doc)
+
         return jsonify({
             "child_id": child_id,
-            "profile_created": profile_doc['created_at'].isoformat()
+            "profile_created": now
         })
-        
+
     except Exception as e:
         logger.error(f"Profile save error: {str(e)}")
         return jsonify({"error": "Failed to save profile"}), 500
@@ -768,23 +787,23 @@ def get_history_endpoint():
     try:
         child_id = request.args.get('child_id')
         limit = int(request.args.get('limit', 10))
-        
+
         if not child_id:
             return jsonify({"error": "child_id required"}), 400
-        
-        story_list = list(
-            stories.find({"child_id": child_id})
-            .sort("timestamp", -1)
-            .limit(limit)
+
+        # Query using GSI (child_id-timestamp-index)
+        response = stories_table.query(
+            IndexName='child_id-timestamp-index',
+            KeyConditionExpression='child_id = :child_id',
+            ExpressionAttributeValues={':child_id': child_id},
+            ScanIndexForward=False,  # Sort descending by timestamp
+            Limit=limit
         )
-        
-        # Convert ObjectId to string for JSON serialization
-        for story in story_list:
-            story['_id'] = str(story['_id'])
-            story['timestamp'] = story['timestamp'].isoformat()
-        
+
+        story_list = response.get('Items', [])
+
         return jsonify({"stories": story_list})
-        
+
     except Exception as e:
         logger.error(f"History retrieval error: {str(e)}")
         return jsonify({"error": "Failed to retrieve history"}), 500
@@ -1040,7 +1059,8 @@ export const getStoryHistory = async (childId, limit = 10) => {
 ### Phase 1: Foundation (Hours 0-6)
 **Backend:**
 - Set up Flask project structure
-- Configure MongoDB connection
+- Configure AWS credentials and DynamoDB connection
+- Create DynamoDB tables with GSI for Stories table
 - Initialize AWS Bedrock client
 - Create basic API endpoints (skeleton)
 - Test Bedrock connection with simple prompt
@@ -1060,7 +1080,7 @@ export const getStoryHistory = async (childId, limit = 10) => {
 **Backend:**
 - Implement cognitive profile prompts (all 3 types)
 - Build story generation pipeline with retry logic
-- Implement MongoDB CRUD operations
+- Implement DynamoDB operations (put_item, get_item, query)
 - Add error handling and logging
 - Test API endpoints with Postman
 
@@ -1120,12 +1140,14 @@ export const getStoryHistory = async (childId, limit = 10) => {
 
 ```txt
 # requirements.txt
-Flask==2.3.0
+Flask==3.0.0
 flask-cors==4.0.0
-pymongo==4.5.0
-boto3==1.28.0
+boto3==1.34.28
+botocore==1.34.28
 gunicorn==21.2.0
 python-dotenv==1.0.0
+Flask-Limiter==3.5.0
+marshmallow==3.20.1
 ```
 
 ### Frontend Deployment (Vercel)
@@ -1146,11 +1168,31 @@ python-dotenv==1.0.0
 
 **Backend (.env):**
 ```
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/storyweave
+# Flask Configuration
+FLASK_APP=app.py
+FLASK_ENV=production
+FLASK_SECRET_KEY=your_secret_key_here
+
+# AWS Configuration (for Bedrock + DynamoDB)
 AWS_ACCESS_KEY_ID=your_access_key
 AWS_SECRET_ACCESS_KEY=your_secret_key
-AWS_DEFAULT_REGION=us-east-1
-FLASK_ENV=production
+AWS_REGION=us-west-2
+
+# AWS Bedrock Model Configuration
+AWS_BEDROCK_MODEL_TIER=quality
+AWS_BEDROCK_MAX_TOKENS=1500
+AWS_BEDROCK_TEMPERATURE=0.7
+
+# DynamoDB Tables
+DYNAMODB_TABLE_PROFILES=StoryWeave-Profiles
+DYNAMODB_TABLE_STORIES=StoryWeave-Stories
+DYNAMODB_TABLE_CACHE=StoryWeave-Cache
+
+# CORS
+FRONTEND_URL=https://your-app.vercel.app
+
+# Rate Limiting
+RATE_LIMIT=30
 ```
 
 **Frontend (.env):**
@@ -1254,7 +1296,7 @@ test('submits form with valid data', async () => {
 - ✅ API response time consistently under 3 seconds
 - ✅ API handles 10+ requests/minute without failure
 - ✅ Error handling gracefully falls back to cached stories
-- ✅ MongoDB operations complete within 100ms
+- ✅ DynamoDB operations complete within 100ms
 
 ### Frontend Success Criteria
 - ✅ Profile creation takes less than 60 seconds
@@ -1280,7 +1322,7 @@ test('submits form with valid data', async () => {
 - [ ] 2 cognitive profiles (ADHD + Autism)
 - [ ] Child profile creation form
 - [ ] Story display page with readable text
-- [ ] MongoDB for profile storage
+- [ ] DynamoDB tables for profile and story storage
 - [ ] Basic error handling
 - [ ] Deployed backend (Railway)
 - [ ] Deployed frontend (Vercel)
@@ -1307,13 +1349,15 @@ test('submits form with valid data', async () => {
 
 ### Backend Requirements
 ```txt
-Flask==2.3.0
+Flask==3.0.0
 flask-cors==4.0.0
-pymongo==4.5.0
-boto3==1.28.0
+boto3==1.34.28
+botocore==1.34.28
 gunicorn==21.2.0
 python-dotenv==1.0.0
 requests==2.31.0
+Flask-Limiter==3.5.0
+marshmallow==3.20.1
 ```
 
 ### Frontend Requirements
@@ -1334,7 +1378,7 @@ requests==2.31.0
 
 ### External Services
 - AWS Bedrock (Claude 3.5 Sonnet API)
-- MongoDB Atlas (M0 free tier)
+- AWS DynamoDB (on-demand pricing)
 - Railway (Backend hosting)
 - Vercel (Frontend hosting)
 - Optional: ElevenLabs or Google TTS (Audio generation)
@@ -1415,8 +1459,8 @@ requests==2.31.0
 **Issue: Story generation takes >10 seconds**
 - **Solution:** Reduce max_tokens, simplify prompt, or implement streaming responses
 
-**Issue: MongoDB connection timeout**
-- **Solution:** Check network settings, verify connection string, ensure IP whitelist includes deployment server
+**Issue: DynamoDB access denied or table not found**
+- **Solution:** Verify AWS credentials have DynamoDB permissions, ensure tables are created, check region matches configuration
 
 **Issue: CORS errors on frontend**
 - **Solution:** Verify flask-cors configuration, check API_BASE_URL in frontend, ensure credentials included if needed
@@ -1432,12 +1476,12 @@ requests==2.31.0
 ## Performance Optimization
 
 ### Backend Optimizations
-- Implement Redis caching for frequently requested stories
-- Use MongoDB indexes on child_id and timestamp fields
+- DynamoDB built-in caching with TTL for frequently requested stories
+- Use DynamoDB GSI (Global Secondary Index) on child_id for efficient queries
 - Compress API responses with gzip
-- Implement connection pooling for MongoDB
+- Configure DynamoDB connection pooling via boto3
 - Use async/await for concurrent operations
-- Cache Bedrock model responses for 24 hours
+- Cache Bedrock model responses for 24 hours using DynamoDB TTL
 
 ### Frontend Optimizations
 - Lazy load route components with React.lazy()
@@ -1510,10 +1554,10 @@ requests==2.31.0
 
 ### Technical Documentation
 - [AWS Bedrock Documentation](https://docs.aws.amazon.com/bedrock/)
+- [AWS DynamoDB Documentation](https://docs.aws.amazon.com/dynamodb/)
 - [Flask Documentation](https://flask.palletsprojects.com/)
 - [React Documentation](https://react.dev/)
 - [Chakra UI Documentation](https://chakra-ui.com/)
-- [MongoDB Documentation](https://www.mongodb.com/docs/)
 
 ### Accessibility Resources
 - [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)

@@ -1,0 +1,236 @@
+[
+  {
+    "story_number": 1,
+    "metadata": {
+      "profile_type": "adhd",
+      "age": 5,
+      "theme": "space",
+      "story_length_minutes": 5,
+      "interests": [
+        "rockets",
+        "stars"
+      ],
+      "model_used": "mistral.mistral-7b-instruct-v0:2",
+      "model_tier": "cheap",
+      "generated_at": "2025-10-18T14:38:41.579062",
+      "success": true,
+      "fallback_used": false
+    },
+    "prompt": "Generate a bedtime story for a 5-year-old child with ADHD. Use these specific guidelines:\n\nSTRUCTURE REQUIREMENTS:\n- Very short sentences (5-7 words maximum per sentence)\n- Frequent paragraph breaks (every 2-3 sentences)\n- Total of approximately 66 sentences\n- Story gradually slows from high energy to calm\n\nLANGUAGE STYLE:\n- Action-oriented verbs (jump, run, fly, discover, zoom, blast)\n- \"Surprise\" moments or hooks every 2-3 sentences to re-engage attention\n- Direct questions to the reader (e.g., \"What do you think happened next?\")\n- Concrete rewards or achievements for the main character\n- NO long descriptive passages\n\nTHEME & CONTENT:\n- Theme: space\n- Include these elements: rocket, stars, planets, moon, astronaut, space station\n- Child's interests: rockets, stars\n\nPACING:\n- Start with HIGH energy and excitement\n- Gradually become CALMER toward the end\n- End with peaceful, sleep-ready language\n\nExample opening style: \"Max saw a rocket. It was shiny and red. 'Wow!' he said.\"\n\nGenerate the complete story now, following these requirements exactly.",
+    "story": "---\n\nRocket Max, the star explorer, saw a shiny red rocket. \"Wow!\" he said. Rocket soared high. Stars twinkled. Max jumped.\n\nPlanet green appeared. \"What's that?\" he asked. Green planet had tall trees, colorful birds. Max zoomed closer.\n\nSuddenly, a blue planet! It had oceans, beaches. Max wanted to explore. He blasted off, leaving green behind.\n\nNext, a giant planet with stripes. \"Stripey!\" Max named it. Stars danced around. Max took pictures.\n\nSuddenly, a meteor shower! Max dove. Stars flew past. What a show!\n\nPlanet yellow next. It was hot and sandy. Max landed, explored caves. He discovered hidden treasures!\n\nPlanet purple was next. It had beautiful flowers. Max picked some, smelled them. They smelled sweet.\n\nSuddenly, the moon! \"Hello, moon!\" Max said. He landed, hopped around. Moonbeams danced on his helmet.\n\nNext, a space station. \"Wow!\" Max said. He entered, met friendly astronauts. They shared stories, laughed.\n\nSuddenly, a surprise! A baby alien! Max played, learned its language. They became friends.\n\nNow, Max was tired. Stars twinkled. He looked at his pictures. \"What a day!\" he thought.\n\nSuddenly, a cozy bed appeared. \"Time for sleep, Rocket Max,\" he said. He lay down, closed his eyes.\n\n\"Goodnight, stars,\" Max whispered. \"Goodnight, planets. Goodnight, moon. Goodnight, Rocket Max.\"\n\nEnd.",
+    "statistics": {
+      "character_count": 1320,
+      "word_count": 208,
+      "sentence_count": 46,
+      "avg_words_per_sentence": 4.5
+    }
+  },
+  {
+    "story_number": 2,
+    "metadata": {
+      "profile_type": "adhd",
+      "age": 7,
+      "theme": "animals",
+      "story_length_minutes": 10,
+      "interests": [
+        "dinosaurs",
+        "dragons"
+      ],
+      "model_used": "mistral.mistral-7b-instruct-v0:2",
+      "model_tier": "cheap",
+      "generated_at": "2025-10-18T14:38:44.564142",
+      "success": true,
+      "fallback_used": false
+    },
+    "prompt": "Generate a bedtime story for a 7-year-old child with ADHD. Use these specific guidelines:\n\nSTRUCTURE REQUIREMENTS:\n- Very short sentences (5-7 words maximum per sentence)\n- Frequent paragraph breaks (every 2-3 sentences)\n- Total of approximately 133 sentences\n- Story gradually slows from high energy to calm\n\nLANGUAGE STYLE:\n- Action-oriented verbs (jump, run, fly, discover, zoom, blast)\n- \"Surprise\" moments or hooks every 2-3 sentences to re-engage attention\n- Direct questions to the reader (e.g., \"What do you think happened next?\")\n- Concrete rewards or achievements for the main character\n- NO long descriptive passages\n\nTHEME & CONTENT:\n- Theme: animals\n- Include these elements: forest, meadow, pond, nest, burrow, tree\n- Child's interests: dinosaurs, dragons\n\nPACING:\n- Start with HIGH energy and excitement\n- Gradually become CALMER toward the end\n- End with peaceful, sleep-ready language\n\nExample opening style: \"Max saw a rocket. It was shiny and red. 'Wow!' he said.\"\n\nGenerate the complete story now, following these requirements exactly.",
+    "story": "---\n\nTitle: Max and the Magical Forest\n\nOnce, in a magical forest, lived Max, a curious dinosaur. He roared, \"Morning!\"\n\nMax ran through the forest, jumping over logs. He reached the meadow, full of colorful flowers.\n\nSuddenly, a dragon appeared, breathing rainbow fire. Max gasped, \"A magical dragon!\"\n\nThe dragon zoomed above Max. \"Follow me,\" it said. Max was excited.\n\nThey soared over the forest, past tall trees. Max discovered a hidden pond. \"Wow, a secret pond!\"\n\nThe dragon landed near a nest. \"This is my home,\" it whispered.\n\nMax helped build eggs with golden shells. \"Surprise!\" a baby dragon hatched.\n\nMax and the baby dragon played. They chased butterflies and splashed in the pond.\n\nSoon, it was time for bed. The dragon led Max to a cozy burrow. \"Rest here, Max.\"\n\nMax snuggled in soft leaves. \"Goodnight, magical dragon,\" he whispered.\n\nThe forest grew quiet. Stars twinkled above. Max's eyes grew heavy.\n\nHe dreamt of adventures with his magical friends. Max slept peacefully, ready for tomorrow.\n\n---\n\nWhat do you think happened next, brave adventurer?",
+    "statistics": {
+      "character_count": 1071,
+      "word_count": 176,
+      "sentence_count": 26,
+      "avg_words_per_sentence": 6.8
+    }
+  },
+  {
+    "story_number": 3,
+    "metadata": {
+      "profile_type": "adhd",
+      "age": 9,
+      "theme": "adventure",
+      "story_length_minutes": 5,
+      "interests": [
+        "treasure",
+        "exploring"
+      ],
+      "model_used": "mistral.mistral-7b-instruct-v0:2",
+      "model_tier": "cheap",
+      "generated_at": "2025-10-18T14:38:48.473497",
+      "success": true,
+      "fallback_used": false
+    },
+    "prompt": "Generate a bedtime story for a 9-year-old child with ADHD. Use these specific guidelines:\n\nSTRUCTURE REQUIREMENTS:\n- Very short sentences (5-7 words maximum per sentence)\n- Frequent paragraph breaks (every 2-3 sentences)\n- Total of approximately 66 sentences\n- Story gradually slows from high energy to calm\n\nLANGUAGE STYLE:\n- Action-oriented verbs (jump, run, fly, discover, zoom, blast)\n- \"Surprise\" moments or hooks every 2-3 sentences to re-engage attention\n- Direct questions to the reader (e.g., \"What do you think happened next?\")\n- Concrete rewards or achievements for the main character\n- NO long descriptive passages\n\nTHEME & CONTENT:\n- Theme: adventure\n- Include these elements: path, bridge, garden, treehouse, meadow, hill\n- Child's interests: treasure, exploring\n\nPACING:\n- Start with HIGH energy and excitement\n- Gradually become CALMER toward the end\n- End with peaceful, sleep-ready language\n\nExample opening style: \"Max saw a rocket. It was shiny and red. 'Wow!' he said.\"\n\nGenerate the complete story now, following these requirements exactly.",
+    "story": "---\n\nIn the forest, Max found a map. It had paths and bridges. He jumped on his bike.\n\nFirst bridge was wooden, old. Max crossed it fast. What do you think happened next?\n\nSuddenly, a tree fell! Max swerved. He landed safe. \"Phew!\" he said.\n\nNext path led to a garden. Colorful flowers bloomed. Max ran, sniffed roses.\n\nTreehouse in the meadow! Max zoomed his bike. It was tall, made of wood.\n\nUp the ladder, Max found gold coins. \"Treasure!\" he shouted. He counted them.\n\nSuddenly, a bird sang. Max looked up. The sun was setting.\n\nNext, a gentle hill. Max pedaled up. The wind blew through his hair.\n\nAt the top, a view of the forest. Max felt calm. He listened to the wind.\n\nThe stars twinkled in the sky. Max lay on the grass. He closed his eyes.\n\nBreathing in, he smelled the flowers. Out, he felt the cool night air.\n\nMax felt tired. His adventure was done. He slept peacefully under the stars.\n\n---\n\nIn this bedtime story, Max goes on an adventure through the forest, encountering various obstacles and discovering a treasure in a treehouse. The story starts with high energy and excitement, with short sentences and frequent paragraph breaks to keep the attention of a child with ADHD. As the story progresses, the language becomes calmer and more peaceful, gradually preparing the child for sleep. The adventure theme and concrete rewards keep the story engaging, while the use of action-oriented verbs and direct questions keeps the child actively involved in the story.",
+    "statistics": {
+      "character_count": 1480,
+      "word_count": 257,
+      "sentence_count": 37,
+      "avg_words_per_sentence": 6.9
+    }
+  },
+  {
+    "story_number": 4,
+    "metadata": {
+      "profile_type": "autism",
+      "age": 6,
+      "theme": "animals",
+      "story_length_minutes": 5,
+      "interests": [
+        "cats",
+        "dogs"
+      ],
+      "model_used": "mistral.mistral-7b-instruct-v0:2",
+      "model_tier": "cheap",
+      "generated_at": "2025-10-18T14:38:52.467354",
+      "success": true,
+      "fallback_used": false
+    },
+    "prompt": "Generate a bedtime story for a 6-year-old child with autism. Use these specific guidelines:\n\nSTRUCTURE REQUIREMENTS:\n- Clear \"First-Then-Finally\" structure (explicitly use these transition words throughout)\n- Total of approximately 41 sentences\n- Predictable story arc with NO sudden surprises\n\nLANGUAGE STYLE:\n- Concrete, literal language ONLY (NO metaphors, idioms, or figurative language)\n- Consistent character behaviors (characters must act predictably)\n- Clear cause-and-effect sequences (use \"because\" and \"so\" to show connections)\n- Repetitive comforting phrases throughout the story\n- Specific routines described step-by-step\n\nTHEME & CONTENT:\n- Theme: animals\n- Include these elements: forest, meadow, pond, nest, burrow, tree\n- Child's interests: cats, dogs\n\nPATTERN REQUIREMENTS:\n- Characters must behave logically and consistently\n- Use counting and sequencing (e.g., \"One, two, three, four, five\")\n- Include phrases like \"just like always\" and \"the same as last time\"\n- Everything should feel safe and predictable\n\nExample opening style: \"First, Luna put on her space helmet. It was blue, just like always. Then, she checked her space backpack. Everything was in the right place.\"\n\nGenerate the complete story now, following these requirements exactly.",
+    "story": "In the beautiful forest, there lived a friendly cat named Felix. He had a cozy burrow under a big oak tree. First, Felix washed his paws with water from the forest pond. Then, he dried them on the soft grass in the meadow. Just like always, Felix felt relaxed and happy.\n\nFelix's best friend was a loyal dog named Max. Max lived in a comfortable nest near the forest edge. Max also followed his routine. First, he shook off the excess water from his fur after drinking from the pond. Then, he lay down in his nest, made from soft leaves and twigs. Max enjoyed the peaceful feeling of the meadow grass beneath him.\n\nOne sunny day, Felix and Max decided to explore the forest together. They followed a clear path through the forest. \"One, two, three, four, five\" tree trunks passed under their bellies as they walked. They reached the pond, shimmering in the sunlight.\n\nAt the pond, Felix and Max saw their reflection in the water. They watched as other animals came to drink, like birds and rabbits. Felix and Max sipped the cool water, feeling refreshed.\n\nNext, they continued their adventure through the forest. They saw many familiar sights, like the tall trees, the winding path, and the soft meadow. They knew exactly what to expect because they followed their routines.\n\nFinally, when the sun began to set, Felix and Max returned to their homes. Felix curled up in his burrow, and Max settled into his nest. They both felt content and safe, knowing they had shared a wonderful day together.\n\nAs they closed their eyes, they repeated their comforting phrase, \"The forest is a special place where we can always find peace and happiness.\" And just like always, they fell asleep with a smile on their faces.",
+    "statistics": {
+      "character_count": 1708,
+      "word_count": 301,
+      "sentence_count": 26,
+      "avg_words_per_sentence": 11.6
+    }
+  },
+  {
+    "story_number": 5,
+    "metadata": {
+      "profile_type": "autism",
+      "age": 8,
+      "theme": "space",
+      "story_length_minutes": 10,
+      "interests": [
+        "planets",
+        "moon"
+      ],
+      "model_used": "mistral.mistral-7b-instruct-v0:2",
+      "model_tier": "cheap",
+      "generated_at": "2025-10-18T14:38:58.332065",
+      "success": true,
+      "fallback_used": false
+    },
+    "prompt": "Generate a bedtime story for a 8-year-old child with autism. Use these specific guidelines:\n\nSTRUCTURE REQUIREMENTS:\n- Clear \"First-Then-Finally\" structure (explicitly use these transition words throughout)\n- Total of approximately 83 sentences\n- Predictable story arc with NO sudden surprises\n\nLANGUAGE STYLE:\n- Concrete, literal language ONLY (NO metaphors, idioms, or figurative language)\n- Consistent character behaviors (characters must act predictably)\n- Clear cause-and-effect sequences (use \"because\" and \"so\" to show connections)\n- Repetitive comforting phrases throughout the story\n- Specific routines described step-by-step\n\nTHEME & CONTENT:\n- Theme: space\n- Include these elements: rocket, stars, planets, moon, astronaut, space station\n- Child's interests: planets, moon\n\nPATTERN REQUIREMENTS:\n- Characters must behave logically and consistently\n- Use counting and sequencing (e.g., \"One, two, three, four, five\")\n- Include phrases like \"just like always\" and \"the same as last time\"\n- Everything should feel safe and predictable\n\nExample opening style: \"First, Luna put on her space helmet. It was blue, just like always. Then, she checked her space backpack. Everything was in the right place.\"\n\nGenerate the complete story now, following these requirements exactly.",
+    "story": "Title: A Rocket Ride to the Moon with Luna\n\nFirst, Luna put on her space helmet. It was blue, just like always. Then, she checked her space backpack. Everything was in the right place: water bottle, snacks, and her favorite planet book.\n\nSecond, Luna's astronaut friend, Leo, arrived. He wore an orange helmet and carried a red space backpack. They greeted each other with a wave and a smile.\n\nThird, they climbed into the rocket. It was big and shiny, with five boosters on the bottom. Luna and Leo fastened their seatbelts. They checked the fuel gauges and pressed the red button to start the engine.\n\nFourth, the rocket engine roared to life. Luna felt the seat vibrate beneath her. The countdown began: 10, 9, 8, 7, 6, 5, 4, 3, 2, 1. Lift-off!\n\nFifth, they soared into the sky, leaving the Earth behind. Stars twinkled all around them. Luna counted the planets in our solar system: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune.\n\nSixth, they reached the moon. It was gray and dusty, just as they had seen in their books. Luna and Leo landed the rocket gently. They stepped out, feeling the cold, powdery moon dust between their toes.\n\nSeventh, they explored the moon's surface. They collected moon rocks and took pictures. Luna's favorite part was seeing the Earth as a bright blue marble in the sky.\n\nEighth, it was time for lunch. Luna and Leo sat on the rocket's steps and ate their sandwiches. They sipped their water and talked about their favorite planets.\n\nNinth, after lunch, they visited the moon's craters. They counted them: the Sea of Tranquility, the Mare Imbrium, the Mare Vaporum. Luna and Leo took turns throwing moon rocks into the craters.\n\nTenth, they returned to the rocket. They strapped themselves in and pressed the red button to start the engine. The rocket lifted off, leaving the moon behind.\n\nEleventh, they flew back to Earth. Stars twinkled all around them once more. Luna and Leo followed the same routine to return to their homes, just like always.\n\nFinally, Luna and Leo were back on Earth. They removed their helmets and smiled at each other. They had a great adventure, and they couldn't wait to do it again, just like always. The end.",
+    "statistics": {
+      "character_count": 2189,
+      "word_count": 380,
+      "sentence_count": 40,
+      "avg_words_per_sentence": 9.5
+    }
+  },
+  {
+    "story_number": 6,
+    "metadata": {
+      "profile_type": "autism",
+      "age": 10,
+      "theme": "adventure",
+      "story_length_minutes": 5,
+      "interests": [
+        "trains",
+        "bridges"
+      ],
+      "model_used": "mistral.mistral-7b-instruct-v0:2",
+      "model_tier": "cheap",
+      "generated_at": "2025-10-18T14:39:03.382553",
+      "success": true,
+      "fallback_used": false
+    },
+    "prompt": "Generate a bedtime story for a 10-year-old child with autism. Use these specific guidelines:\n\nSTRUCTURE REQUIREMENTS:\n- Clear \"First-Then-Finally\" structure (explicitly use these transition words throughout)\n- Total of approximately 41 sentences\n- Predictable story arc with NO sudden surprises\n\nLANGUAGE STYLE:\n- Concrete, literal language ONLY (NO metaphors, idioms, or figurative language)\n- Consistent character behaviors (characters must act predictably)\n- Clear cause-and-effect sequences (use \"because\" and \"so\" to show connections)\n- Repetitive comforting phrases throughout the story\n- Specific routines described step-by-step\n\nTHEME & CONTENT:\n- Theme: adventure\n- Include these elements: path, bridge, garden, treehouse, meadow, hill\n- Child's interests: trains, bridges\n\nPATTERN REQUIREMENTS:\n- Characters must behave logically and consistently\n- Use counting and sequencing (e.g., \"One, two, three, four, five\")\n- Include phrases like \"just like always\" and \"the same as last time\"\n- Everything should feel safe and predictable\n\nExample opening style: \"First, Luna put on her space helmet. It was blue, just like always. Then, she checked her space backpack. Everything was in the right place.\"\n\nGenerate the complete story now, following these requirements exactly.",
+    "story": "Title: The Train Adventure Through the Garden\n\nFirst, Max put on his train conductor hat. It was red, just like always. Then, he checked his train conductor vest. All the buttons were in a row, neat and tidy.\n\nMax sat in his favorite chair by the window, watching the trains go by. He loved the sound of the trains whistling. He counted the cars on each train, \"One, two, three, four, five.\"\n\nNext, Max's mom came into the room. She wore her usual yellow apron. She said, \"Max, it's time for our adventure. Just like always.\"\n\nFirst, they went outside to the path. Max wore his comfortable hiking boots. The path was made of stones, just like last time. They walked together, side by side.\n\nThen, they came to the bridge. Max loved bridges, especially this one. It was sturdy and made of wood. They counted the boards as they crossed, \"One, two, three, four, five.\"\n\nJust beyond the bridge was the beautiful garden. Max's favorite part was the treehouse. It was made of wood and had a red roof, just like always. They climbed the ladder, step by step.\n\nInside the treehouse, they found blankets and pillows. Max sat on his favorite spot, the chair by the window. He looked out at the meadow below. The sun was setting, making everything golden.\n\nNext, they read a story. Max's mom always read the same one, about a brave train conductor. Max listened carefully, remembering the story just like always.\n\nAfter the story, they snacked on apple slices and carrot sticks. Max's mom always brought these, just like always. They counted the apple slices and carrot sticks, \"One, two, three, four, five.\"\n\nFinally, it was time for bed. Max put on his pajamas, which were blue and had trains on them, just like always. He climbed into bed and snuggled under the blankets. His mom turned off the light and said, \"Goodnight, Max. We'll have another adventure tomorrow.\"\n\nMax closed his eyes and listened to the sounds of the night. He knew exactly what would happen next, just like always. And he felt safe and happy, ready for another day of train adventures.",
+    "statistics": {
+      "character_count": 2050,
+      "word_count": 362,
+      "sentence_count": 41,
+      "avg_words_per_sentence": 8.8
+    }
+  },
+  {
+    "story_number": 7,
+    "metadata": {
+      "profile_type": "anxiety",
+      "age": 5,
+      "theme": "animals",
+      "story_length_minutes": 5,
+      "interests": [
+        "bunnies",
+        "flowers"
+      ],
+      "model_used": "mistral.mistral-7b-instruct-v0:2",
+      "model_tier": "cheap",
+      "generated_at": "2025-10-18T14:39:08.332240",
+      "success": true,
+      "fallback_used": false
+    },
+    "prompt": "Generate a calming bedtime story for a 5-year-old child with anxiety. Use these specific guidelines:\n\nSTRUCTURE REQUIREMENTS:\n- Gentle, reassuring tone throughout\n- Total of approximately 30 sentences\n- Predictable, SAFE story arc (NO conflict, danger, or uncertainty)\n\nLANGUAGE STYLE:\n- Repetitive calming phrases (e.g., \"everything is safe,\" \"you are loved,\" \"all is well\")\n- Emphasis on comfort, security, and safety\n- Breathing cues embedded naturally (e.g., \"she took a slow, deep breath\")\n- Positive, peaceful resolution guaranteed\n- Soft, descriptive language focused on pleasant sensory details\n\nTHEME & CONTENT:\n- Theme: animals\n- Include these elements: forest, meadow, pond, nest, burrow, tree\n- Child's interests: bunnies, flowers\n\nEMOTIONAL TONE:\n- Create a sense of complete safety and calm\n- Avoid ANY tension, conflict, or scary elements\n- Focus on peaceful imagery and comforting repetition\n- Include phrases about being loved, safe, and warm\n- Use gentle, slow pacing throughout\n\nExample opening style: \"In a cozy little garden, everything was peaceful and safe. The flowers swayed gently in the soft breeze. Everything was calm.\"\n\nGenerate the complete story now, following these requirements exactly.",
+    "story": "In the heart of a tranquil forest, where sunlight filtered through the trees, a cozy little meadow bloomed. Daisies, violets, and roses danced gracefully in the gentle breeze. Everywhere you looked, there was beauty and peace.\n\nAmong the vibrant flowers, a fluffy white bunny named Billy hopped along. He carried a small bouquet of his favorite daisies. Billy loved the meadow and felt safe in its embrace.\n\nBeyond the meadow, a crystal-clear pond sparkled under the sun's warm rays. Tiny fish swam happily, darting back and forth, creating ripples in the still water. The pond was a perfect reflection of the sky above, painted in shades of blue and pink.\n\nNear the pond, a wise old oak tree stood tall and strong. Its branches stretched wide, offering shade and protection to all those who sought refuge. Billy often sat beneath its branches, listening to the gentle whispers of the wind.\n\nAs the sun began to set, casting a warm golden glow over the meadow, Billy made his way to his nest. It was a cozy burrow, lined with soft grass and warm leaves. He took a slow, deep breath, feeling the warmth of the earth around him.\n\nBilly snuggled into his soft nest, surrounded by the soothing sounds of the forest. The night was quiet and peaceful, with the occasional hoot of an owl or the gentle patter of raindrops. Everything was safe and calm.\n\nThe stars twinkled above, casting a soft glow over the meadow. Billy closed his eyes, feeling loved and protected. He knew that no matter what, he would always be safe in his forest home.\n\nWith each gentle breath, Billy's mind grew more peaceful. He was surrounded by the calming scents of the forest – the sweet fragrance of the flowers, the earthy scent of the soil, and the fresh, clean air. Everything was just as it should be, and Billy knew he could rest now.\n\nAs he drifted off to sleep, Billy felt a warm sense of comfort and safety. He was loved, he was safe, and everything was well. The forest whispered its lullaby, and Billy's dreams were filled with the beauty and peace of his enchanted home.",
+    "statistics": {
+      "character_count": 2054,
+      "word_count": 364,
+      "sentence_count": 27,
+      "avg_words_per_sentence": 13.5
+    }
+  },
+  {
+    "story_number": 8,
+    "metadata": {
+      "profile_type": "anxiety",
+      "age": 7,
+      "theme": "adventure",
+      "story_length_minutes": 10,
+      "interests": [
+        "gardens",
+        "nature"
+      ],
+      "model_used": "mistral.mistral-7b-instruct-v0:2",
+      "model_tier": "cheap",
+      "generated_at": "2025-10-18T14:39:14.142915",
+      "success": true,
+      "fallback_used": false
+    },
+    "prompt": "Generate a calming bedtime story for a 7-year-old child with anxiety. Use these specific guidelines:\n\nSTRUCTURE REQUIREMENTS:\n- Gentle, reassuring tone throughout\n- Total of approximately 60 sentences\n- Predictable, SAFE story arc (NO conflict, danger, or uncertainty)\n\nLANGUAGE STYLE:\n- Repetitive calming phrases (e.g., \"everything is safe,\" \"you are loved,\" \"all is well\")\n- Emphasis on comfort, security, and safety\n- Breathing cues embedded naturally (e.g., \"she took a slow, deep breath\")\n- Positive, peaceful resolution guaranteed\n- Soft, descriptive language focused on pleasant sensory details\n\nTHEME & CONTENT:\n- Theme: adventure\n- Include these elements: path, bridge, garden, treehouse, meadow, hill\n- Child's interests: gardens, nature\n\nEMOTIONAL TONE:\n- Create a sense of complete safety and calm\n- Avoid ANY tension, conflict, or scary elements\n- Focus on peaceful imagery and comforting repetition\n- Include phrases about being loved, safe, and warm\n- Use gentle, slow pacing throughout\n\nExample opening style: \"In a cozy little garden, everything was peaceful and safe. The flowers swayed gently in the soft breeze. Everything was calm.\"\n\nGenerate the complete story now, following these requirements exactly.",
+    "story": "Once upon a time, in a hidden corner of the enchanted forest, there was a winding, cobblestone path. It led to a magnificent, old wooden bridge that arched gracefully over a babbling brook. The sun was setting, casting a warm, golden glow over the forest.\n\nAs our little hero, Sammy, began his journey, he felt the soft, cool stones beneath his tiny feet. He took a slow, deep breath, inhaling the sweet scent of roses and lilies. \"Everything is safe,\" he whispered to himself.\n\nHe continued walking along the path, feeling the gentle breeze tickle his cheeks. The leaves rustled softly above him, whispering secrets in the wind. Sammy felt a sense of peace wash over him. \"I am loved,\" he thought, his heart swelling with warmth.\n\nThe bridge creaked softly as he crossed it, but it was solid and strong. He paused for a moment to look down at the crystal-clear water below. Fish swam gracefully in the gentle current, and he could hear the soothing sound of the water as it flowed over the stones.\n\nOn the other side of the bridge, there was a beautiful, secret garden. Sammy stepped inside, feeling the soft grass beneath his feet. He took a deep breath, inhaling the sweet fragrance of the flowers. \"All is well,\" he murmured, his eyes closed in contentment.\n\nIn the center of the garden stood a magnificent treehouse. It was made of sturdy wood and had vines climbing up its sides. Sammy climbed the wooden ladder, feeling the rough bark against his hands. He took a slow, deep breath as he reached the top, feeling safe and secure in his cozy hideaway.\n\nFrom his treehouse, Sammy could see a beautiful meadow stretching out before him. The sun was setting, casting a warm, golden glow over the landscape. He could hear the gentle buzzing of bees and the soft chirping of crickets. \"I am at peace,\" he thought, feeling a sense of complete calm.\n\nAs the night grew darker, Sammy snuggled into his blanket, feeling the warmth and security of his treehouse. He took a slow, deep breath, inhaling the soothing scents of the forest. \"Everything is safe,\" he whispered to himself, his eyes growing heavy as he drifted off to sleep.\n\nAnd so, our little hero, Sammy, continued his peaceful adventure, exploring the winding path, the old wooden bridge, the beautiful garden, and his cozy treehouse. He knew that no matter what, he was safe and loved. And with that thought, he drifted off to dreamland, surrounded by the gentle sounds and scents of the forest.",
+    "statistics": {
+      "character_count": 2455,
+      "word_count": 430,
+      "sentence_count": 31,
+      "avg_words_per_sentence": 13.9
+    }
+  },
+  {
+    "story_number": 9,
+    "metadata": {
+      "profile_type": "anxiety",
+      "age": 9,
+      "theme": "space",
+      "story_length_minutes": 5,
+      "interests": [
+        "stars",
+        "peaceful"
+      ],
+      "model_used": "mistral.mistral-7b-instruct-v0:2",
+      "model_tier": "cheap",
+      "generated_at": "2025-10-18T14:39:18.831466",
+      "success": true,
+      "fallback_used": false
+    },
+    "prompt": "Generate a calming bedtime story for a 9-year-old child with anxiety. Use these specific guidelines:\n\nSTRUCTURE REQUIREMENTS:\n- Gentle, reassuring tone throughout\n- Total of approximately 30 sentences\n- Predictable, SAFE story arc (NO conflict, danger, or uncertainty)\n\nLANGUAGE STYLE:\n- Repetitive calming phrases (e.g., \"everything is safe,\" \"you are loved,\" \"all is well\")\n- Emphasis on comfort, security, and safety\n- Breathing cues embedded naturally (e.g., \"she took a slow, deep breath\")\n- Positive, peaceful resolution guaranteed\n- Soft, descriptive language focused on pleasant sensory details\n\nTHEME & CONTENT:\n- Theme: space\n- Include these elements: rocket, stars, planets, moon, astronaut, space station\n- Child's interests: stars, peaceful\n\nEMOTIONAL TONE:\n- Create a sense of complete safety and calm\n- Avoid ANY tension, conflict, or scary elements\n- Focus on peaceful imagery and comforting repetition\n- Include phrases about being loved, safe, and warm\n- Use gentle, slow pacing throughout\n\nExample opening style: \"In a cozy little garden, everything was peaceful and safe. The flowers swayed gently in the soft breeze. Everything was calm.\"\n\nGenerate the complete story now, following these requirements exactly.",
+    "story": "Once upon a time, in a quiet corner of the universe, nestled among the stars, there was a beautiful, shiny rocket. This rocket was not like any other, for it was a special rocket, designed just for you. It was painted a gentle blue, the color of the calming night sky, and it shimmered with twinkling stars.\n\nYou climbed aboard the rocket, feeling the soft, plush seat beneath you. Your astronaut helmet was comfortable and light, and it was adorned with stickers of your favorite stars. You took a slow, deep breath, feeling the cool air fill your lungs. Everything was safe and calm.\n\nAs you lifted off the ground, you looked out the window and saw the Earth shrinking in the distance. It was a beautiful sight, with its swirling blues and greens, and you felt a warm sense of love for your home. You took another deep breath, feeling the comforting weight of the helmet on your head.\n\nFloating in the vast expanse of space, you marveled at the twinkling stars that surrounded you. They were like diamonds scattered across the black velvet of the night sky. You felt a sense of peace wash over you, knowing that you were safe and loved.\n\nSoon, you arrived at a magnificent space station. It was a glowing orb of light, with sparkling solar panels that reflected the stars. You docked your rocket and stepped out onto the station, feeling the gentle tug of the gravity. The station was warm and cozy, with soft, glowing lights and a gentle hum of machinery.\n\nYou explored the space station, marveling at the wonders of technology and science. There were laboratories filled with experiments, a garden filled with exotic plants, and a library filled with stories from all over the universe. But no matter where you went, you always felt a sense of calm and safety.\n\nAs you floated in your sleeping pod, you looked out the window at the stars. They twinkled softly, and you took a deep, calming breath. You were safe and loved, surrounded by the wonders of the universe. And as you drifted off to sleep, you knew that everything was going to be okay.\n\nThe end.",
+    "statistics": {
+      "character_count": 2059,
+      "word_count": 367,
+      "sentence_count": 25,
+      "avg_words_per_sentence": 14.7
+    }
+  }
+]
