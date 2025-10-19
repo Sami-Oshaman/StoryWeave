@@ -204,3 +204,60 @@ export const getProfile = async (childId) => {
     throw error;
   }
 };
+
+/**
+ * Generate audio narration for text using ElevenLabs v3
+ */
+export const generateAudio = async (text, mood = 'calm', theme = '', voiceId = null) => {
+  try {
+    const response = await fetch(`${API_URL}/generate-audio`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text,
+        mood,
+        theme,
+        voice_id: voiceId
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to generate audio');
+    }
+
+    const data = await response.json();
+
+    // Convert base64 to blob URL for audio playback
+    const audioBlob = base64ToBlob(data.audio_data, 'audio/mpeg');
+    const audioUrl = URL.createObjectURL(audioBlob);
+
+    return {
+      audioUrl,
+      audioBlob,
+      textLength: data.text_length,
+      mood: data.mood,
+      theme: data.theme
+    };
+  } catch (error) {
+    console.error('Generate audio error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Helper function to convert base64 to blob
+ */
+const base64ToBlob = (base64, contentType) => {
+  const byteCharacters = atob(base64);
+  const byteNumbers = new Array(byteCharacters.length);
+
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+
+  const byteArray = new Uint8Array(byteNumbers);
+  return new Blob([byteArray], { type: contentType });
+};

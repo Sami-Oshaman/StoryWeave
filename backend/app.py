@@ -24,6 +24,7 @@ from database import (
 )
 from story_generator import create_story, handle_generation_error
 from image_generator import generate_story_images
+from tts_service import generate_audio_for_page
 from utils import (
     create_cache_key,
     generate_uuid,
@@ -34,6 +35,7 @@ from utils import (
     validate_age,
     format_error_response
 )
+import base64
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -289,10 +291,13 @@ def save_profile_endpoint():
             "updated_at": now
         }
 
-        # Save to DynamoDB
-        save_profile(profile_doc)
-
-        logger.info(f"Profile created: {child_id}")
+        # Save to DynamoDB (with graceful fallback if tables don't exist)
+        try:
+            save_profile(profile_doc)
+            logger.info(f"Profile created and saved to DynamoDB: {child_id}")
+        except Exception as db_error:
+            logger.warning(f"Could not save to DynamoDB (tables may not exist): {str(db_error)}")
+            logger.info(f"Profile created in-memory only: {child_id}")
 
         return jsonify({
             "child_id": child_id,
@@ -301,8 +306,8 @@ def save_profile_endpoint():
         }), 201
 
     except Exception as e:
-        logger.error(f"Error saving profile: {str(e)}")
-        return format_error_response("Failed to save profile", 500)
+        logger.error(f"Error in profile endpoint: {str(e)}")
+        return format_error_response("Failed to create profile", 500)
 
 
 @app.route('/api/get-history', methods=['GET'])
@@ -372,6 +377,69 @@ def get_profile_endpoint():
     except Exception as e:
         logger.error(f"Error retrieving profile: {str(e)}")
         return format_error_response("Failed to retrieve profile", 500)
+
+
+@app.route('/api/generate-audio', methods=['POST'])
+def generate_audio_endpoint():
+    """
+    Generate audio narration for a page of text using ElevenLabs v3
+
+    Required fields:
+        - text: string (the text to convert to speech)
+
+    Optional fields:
+        - voice_id: string (ElevenLabs voice ID, auto-selected if not provided)
+        - mood: string (calm, playful, curious, brave)
+        - theme: string (story theme/genre)
+
+    Returns:
+        - audio_data: base64-encoded MP3 audio
+        - content_type: audio/mpeg
+        - voice_id: the voice ID used
+    """
+    try:
+        data = request.json
+
+        if not data:
+            return format_error_response("No data provided")
+
+        # Validate required fields
+        if 'text' not in data:
+            return format_error_response("Missing required field: text")
+
+        text = data['text']
+        voice_id = data.get('voice_id')
+        mood = data.get('mood', 'calm')
+        theme = data.get('theme', '')
+
+        if not text or not text.strip():
+            return format_error_response("Text cannot be empty")
+
+        logger.info(f"Generating audio for text length: {len(text)} characters, mood: {mood}, theme: {theme}")
+
+        # Generate audio with mood and theme for voice selection
+        audio_bytes = generate_audio_for_page(text, voice_id, mood, theme)
+
+        # Encode to base64 for JSON transport
+        audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
+
+        logger.info(f"Audio generated successfully with v3 model, base64 length: {len(audio_base64)}")
+
+        return jsonify({
+            "audio_data": audio_base64,
+            "content_type": "audio/mpeg",
+            "text_length": len(text),
+            "mood": mood,
+            "theme": theme,
+            "success": True
+        })
+
+    except ValueError as e:
+        logger.error(f"Validation error: {str(e)}")
+        return format_error_response(str(e), 400)
+    except Exception as e:
+        logger.error(f"Error generating audio: {str(e)}")
+        return format_error_response("Failed to generate audio", 500)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Moon, Sun, Volume2, VolumeX, ChevronLeft, ChevronRight, Sparkles, Star } from 'lucide-react';
-import { createProfile, generateStory, healthCheck } from './api';
+import React, { useState, useEffect, useRef } from 'react';
+import { Moon, Sun, Volume2, VolumeX, ChevronLeft, ChevronRight, Sparkles, Star, Play, Pause } from 'lucide-react';
+import { createProfile, generateStory, healthCheck, generateAudio } from './api';
 
 // Child Profile Screen
 const ProfileSetup = ({ onComplete }) => {
@@ -481,7 +481,12 @@ const StoryGenerator = ({ profile, onGenerate, onBack }) => {
 const StoryDisplay = ({ storyData, profile, onBack, onNewStory }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const [pageAudioCache, setPageAudioCache] = useState({});
+
+  const audioRef = useRef(null);
+  const progressIntervalRef = useRef(null);
 
   // Split story into pages and map images
   const pages = React.useMemo(() => {
@@ -539,38 +544,130 @@ const StoryDisplay = ({ storyData, profile, onBack, onNewStory }) => {
     });
   }, [storyData.story, storyData.images]);
 
-  const dummyPages = [
-    {
-      text: "Luna closed her eyes and drifted off to sleep, dreaming of tomorrow's adventures. The end.",
-      image: "😴🌟"
-    }
-  ];
+  // Generate and auto-play audio when page changes
+  useEffect(() => {
+    const generateAndPlayAudio = async () => {
+      if (!pages[currentPage]?.text) return;
 
-  const handlePlayPause = () => {
-    if (isPlaying) {
-      window.speechSynthesis.cancel();
-      setIsPlaying(false);
+      // Check if audio is already cached
+      if (pageAudioCache[currentPage]) {
+        playAudioFromUrl(pageAudioCache[currentPage]);
+        return;
+      }
+
+      // Generate new audio with mood and theme from story
+      setIsLoadingAudio(true);
+      try {
+        const mood = storyData?.storyParams?.mood || 'calm';
+        const theme = storyData?.storyParams?.genre || '';
+
+        const { audioUrl } = await generateAudio(
+          pages[currentPage].text,
+          mood,
+          theme
+        );
+
+        // Cache the audio URL
+        setPageAudioCache(prev => ({
+          ...prev,
+          [currentPage]: audioUrl
+        }));
+
+        // Auto-play the audio
+        playAudioFromUrl(audioUrl);
+      } catch (error) {
+        console.error('Failed to generate audio:', error);
+        setIsLoadingAudio(false);
+      }
+    };
+
+    generateAndPlayAudio();
+
+    // Cleanup: stop audio when component unmounts or page changes
+    return () => {
+      stopAudio();
+    };
+  }, [currentPage, pages, storyData]);
+
+  const playAudioFromUrl = (audioUrl) => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio(audioUrl);
     } else {
-      const utterance = new SpeechSynthesisUtterance(pages[currentPage].text);
-      utterance.rate = playbackSpeed;
-      utterance.onend = () => setIsPlaying(false);
-      window.speechSynthesis.speak(utterance);
+      audioRef.current.src = audioUrl;
+    }
+
+    audioRef.current.onloadedmetadata = () => {
+      setIsLoadingAudio(false);
+      audioRef.current.play();
       setIsPlaying(true);
+      startProgressTracking();
+    };
+
+    audioRef.current.onended = () => {
+      setIsPlaying(false);
+      setAudioProgress(0);
+      stopProgressTracking();
+    };
+
+    audioRef.current.onerror = () => {
+      console.error('Audio playback error');
+      setIsLoadingAudio(false);
+      setIsPlaying(false);
+    };
+  };
+
+  const startProgressTracking = () => {
+    stopProgressTracking();
+    progressIntervalRef.current = setInterval(() => {
+      if (audioRef.current) {
+        const progress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+        setAudioProgress(progress || 0);
+      }
+    }, 100);
+  };
+
+  const stopProgressTracking = () => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
     }
   };
 
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setIsPlaying(false);
+    setAudioProgress(0);
+    stopProgressTracking();
+  };
+
+  const togglePlayPause = () => {
+    if (!audioRef.current) return;
+
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+      stopProgressTracking();
+    } else {
+      audioRef.current.play();
+      setIsPlaying(true);
+      startProgressTracking();
+    }
+  };
+
+
   const nextPage = () => {
     if (currentPage < pages.length - 1) {
-      window.speechSynthesis.cancel();
-      setIsPlaying(false);
+      stopAudio();
       setCurrentPage(currentPage + 1);
     }
   };
 
   const prevPage = () => {
     if (currentPage > 0) {
-      window.speechSynthesis.cancel();
-      setIsPlaying(false);
+      stopAudio();
       setCurrentPage(currentPage - 1);
     }
   };
@@ -635,35 +732,29 @@ const StoryDisplay = ({ storyData, profile, onBack, onNewStory }) => {
 
       {/* Audio Controls */}
       <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-purple-800/30 mb-4">
-        <div className="space-y-4">
-          <div className="flex justify-center">
-            <button
-              onClick={handlePlayPause}
-              className="flex items-center gap-2 px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white text-lg font-semibold rounded-xl transition-colors"
-            >
-              {isPlaying ? <VolumeX size={20} /> : <Volume2 size={20} />}
-              {isPlaying ? 'Stop Audio' : 'Play Audio'}
-            </button>
-          </div>
-
-          <div>
-            <label className="block text-sm text-purple-200 text-center mb-2">
-              Narration Speed: {playbackSpeed}x
-            </label>
-            <input
-              type="range"
-              min="0.5"
-              max="2"
-              step="0.25"
-              value={playbackSpeed}
-              onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))}
-              className="w-full h-2 bg-purple-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
-            />
-            <div className="flex justify-between text-xs text-purple-300 mt-1">
-              <span>Slower</span>
-              <span>Faster</span>
-            </div>
-          </div>
+        <div className="flex items-center justify-center gap-4">
+          <button
+            onClick={togglePlayPause}
+            disabled={isLoadingAudio}
+            className="flex items-center gap-2 px-8 py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 disabled:cursor-not-allowed text-white text-lg font-semibold rounded-xl transition-colors"
+          >
+            {isLoadingAudio ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Generating narration...
+              </>
+            ) : isPlaying ? (
+              <>
+                <Pause size={20} />
+                Pause Narration
+              </>
+            ) : (
+              <>
+                <Play size={20} />
+                Play Narration
+              </>
+            )}
+          </button>
         </div>
       </div>
 

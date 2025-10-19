@@ -68,6 +68,11 @@ marshmallow==3.20.1
 gunicorn==21.2.0  # WSGI server for production
 
 # ================================
+# ElevenLabs Text-to-Speech
+# ================================
+elevenlabs==1.2.2
+
+# ================================
 # Installation Instructions:
 # ================================
 # 
