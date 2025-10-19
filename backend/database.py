@@ -25,12 +25,32 @@ def create_tables():
 
     tables_config = [
         {
+            'TableName': os.environ.get('DYNAMODB_TABLE_USERS', 'StoryWeave-Users'),
+            'KeySchema': [
+                {'AttributeName': 'email', 'KeyType': 'HASH'}
+            ],
+            'AttributeDefinitions': [
+                {'AttributeName': 'email', 'AttributeType': 'S'}
+            ],
+            'BillingMode': 'PAY_PER_REQUEST'
+        },
+        {
             'TableName': os.environ.get('DYNAMODB_TABLE_PROFILES', 'StoryWeave-Profiles'),
             'KeySchema': [
                 {'AttributeName': 'child_id', 'KeyType': 'HASH'}
             ],
             'AttributeDefinitions': [
-                {'AttributeName': 'child_id', 'AttributeType': 'S'}
+                {'AttributeName': 'child_id', 'AttributeType': 'S'},
+                {'AttributeName': 'user_email', 'AttributeType': 'S'}
+            ],
+            'GlobalSecondaryIndexes': [
+                {
+                    'IndexName': 'user_email-index',
+                    'KeySchema': [
+                        {'AttributeName': 'user_email', 'KeyType': 'HASH'}
+                    ],
+                    'Projection': {'ProjectionType': 'ALL'}
+                }
             ],
             'BillingMode': 'PAY_PER_REQUEST'
         },
@@ -103,9 +123,10 @@ def get_table(table_type):
     Get a DynamoDB table reference
 
     Args:
-        table_type: 'profiles', 'stories', or 'cache'
+        table_type: 'users', 'profiles', 'stories', or 'cache'
     """
     table_names = {
+        'users': os.environ.get('DYNAMODB_TABLE_USERS', 'StoryWeave-Users'),
         'profiles': os.environ.get('DYNAMODB_TABLE_PROFILES', 'StoryWeave-Profiles'),
         'stories': os.environ.get('DYNAMODB_TABLE_STORIES', 'StoryWeave-Stories'),
         'cache': os.environ.get('DYNAMODB_TABLE_CACHE', 'StoryWeave-Cache')
@@ -120,14 +141,17 @@ def get_table(table_type):
 
 def save_profile(profile_data):
     """Save a child profile to DynamoDB"""
-    table = get_table('profiles')
+    import memory_store
+
     try:
+        table = get_table('profiles')
         table.put_item(Item=profile_data)
-        logger.info(f"Profile saved: {profile_data['child_id']}")
+        logger.info(f"Profile saved to DynamoDB: {profile_data['child_id']}")
         return True
     except ClientError as e:
-        logger.error(f"Error saving profile: {str(e)}")
-        raise
+        logger.warning(f"DynamoDB error, using memory store: {str(e)}")
+        # Fallback to memory store
+        return memory_store.save_profile_memory(profile_data)
 
 
 def get_profile(child_id):
@@ -213,6 +237,68 @@ def save_cached_story(cache_key, story_text, expires_at):
     except ClientError as e:
         logger.error(f"Error caching story: {str(e)}")
         return False
+
+
+def create_user(email, password_hash, name):
+    """Create a new user account"""
+    from utils import get_current_timestamp
+    import memory_store
+
+    try:
+        table = get_table('users')
+        user_data = {
+            'email': email,
+            'password_hash': password_hash,
+            'name': name,
+            'created_at': get_current_timestamp(),
+            'updated_at': get_current_timestamp()
+        }
+
+        # Check if user already exists
+        existing_user = get_user(email)
+        if existing_user:
+            return {'error': 'User with this email already exists'}, False
+
+        table.put_item(Item=user_data)
+        logger.info(f"User created in DynamoDB: {email}")
+        return user_data, True
+    except ClientError as e:
+        logger.warning(f"DynamoDB error, using memory store: {str(e)}")
+        # Fallback to memory store
+        return memory_store.create_user_memory(email, password_hash, name)
+
+
+def get_user(email):
+    """Get user by email"""
+    import memory_store
+
+    try:
+        table = get_table('users')
+        response = table.get_item(Key={'email': email})
+        return response.get('Item')
+    except ClientError as e:
+        logger.warning(f"DynamoDB error, checking memory store: {str(e)}")
+        # Fallback to memory store
+        return memory_store.get_user_memory(email)
+
+
+def get_profiles_by_user(user_email):
+    """Get all child profiles for a user"""
+    import memory_store
+    from boto3.dynamodb.conditions import Attr
+
+    try:
+        table = get_table('profiles')
+        # Use scan with filter instead of query (works without GSI)
+        # Note: This is less efficient but works with current IAM permissions
+        response = table.scan(
+            FilterExpression=Attr('user_email').eq(user_email)
+        )
+        return response.get('Items', [])
+    except ClientError as e:
+        logger.warning(f"DynamoDB error, checking memory store: {str(e)}")
+        # Fallback to memory store
+        return memory_store.get_profiles_by_user_memory(user_email)
 
 
 if __name__ == "__main__":

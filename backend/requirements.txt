@@ -73,6 +73,11 @@ gunicorn==21.2.0  # WSGI server for production
 elevenlabs==1.2.2
 
 # ================================
+# Password Hashing
+# ================================
+bcrypt==4.1.2
+
+# ================================
 # Installation Instructions:
 # ================================
 # 

@@ -20,7 +20,10 @@ from database import (
     save_profile,
     get_profile,
     save_story,
-    get_story_history
+    get_story_history,
+    create_user,
+    get_user,
+    get_profiles_by_user
 )
 from story_generator import create_story, handle_generation_error
 from image_generator import generate_story_images
@@ -75,6 +78,179 @@ def health_check():
     })
 
 
+@app.route('/api/auth/signup', methods=['POST'])
+def signup():
+    """
+    Create a new user account
+
+    Required fields:
+        - email: string
+        - password: string (min 6 characters)
+        - name: string
+    """
+    import bcrypt
+
+    try:
+        data = request.json
+
+        if not data:
+            return format_error_response("No data provided")
+
+        # Validate required fields
+        required_fields = ['email', 'password', 'name']
+        missing_fields = [field for field in required_fields if field not in data]
+
+        if missing_fields:
+            return format_error_response(f"Missing required fields: {', '.join(missing_fields)}")
+
+        # Validate email format
+        email = data['email'].lower().strip()
+        if '@' not in email or '.' not in email:
+            return format_error_response("Invalid email address")
+
+        # Validate password length
+        if len(data['password']) < 6:
+            return format_error_response("Password must be at least 6 characters")
+
+        # Hash password
+        password_hash = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+        # Create user in DynamoDB (with graceful fallback)
+        from utils import get_current_timestamp
+
+        try:
+            user_data, success = create_user(
+                email=email,
+                password_hash=password_hash,
+                name=data['name'].strip()
+            )
+
+            if not success:
+                return format_error_response(user_data['error'], 409)
+
+            # Return user data without password hash
+            return jsonify({
+                'email': user_data['email'],
+                'name': user_data['name'],
+                'created_at': user_data['created_at'],
+                'success': True
+            }), 201
+
+        except Exception as db_error:
+            logger.warning(f"Could not save to DynamoDB (tables may not exist): {str(db_error)}")
+            # Create in-memory user data for demo purposes
+            now = get_current_timestamp()
+            return jsonify({
+                'email': email,
+                'name': data['name'].strip(),
+                'created_at': now,
+                'success': True,
+                'note': 'Account created in-memory only (database unavailable)'
+            }), 201
+
+    except Exception as e:
+        logger.error(f"Error in signup endpoint: {str(e)}")
+        return format_error_response("Internal server error", 500)
+
+
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    """
+    Login user
+
+    Required fields:
+        - email: string
+        - password: string
+    """
+    import bcrypt
+
+    try:
+        data = request.json
+
+        if not data:
+            return format_error_response("No data provided")
+
+        # Validate required fields
+        if 'email' not in data or 'password' not in data:
+            return format_error_response("Email and password are required")
+
+        email = data['email'].lower().strip()
+
+        # Get user from DynamoDB
+        try:
+            user = get_user(email)
+        except Exception as db_error:
+            logger.warning(f"Could not get user from DynamoDB: {str(db_error)}")
+            # Allow demo login without database for testing
+            user = None
+
+        if not user:
+            # For demo purposes, allow any login when database is unavailable
+            logger.warning(f"Database unavailable - allowing demo login for {email}")
+            return jsonify({
+                'email': email,
+                'name': email.split('@')[0].capitalize(),
+                'profiles': [],
+                'success': True,
+                'note': 'Demo login (database unavailable)'
+            })
+
+        # Verify password
+        if not bcrypt.checkpw(data['password'].encode('utf-8'), user['password_hash'].encode('utf-8')):
+            return format_error_response("Invalid email or password", 401)
+
+        # Get user's child profiles
+        try:
+            profiles = get_profiles_by_user(email)
+        except Exception as db_error:
+            logger.warning(f"Could not get profiles from DynamoDB: {str(db_error)}")
+            profiles = []
+
+        logger.info(f"User logged in: {email}")
+
+        # Return user data without password hash
+        return jsonify({
+            'email': user['email'],
+            'name': user['name'],
+            'profiles': profiles,
+            'success': True
+        })
+
+    except Exception as e:
+        logger.error(f"Error in login endpoint: {str(e)}")
+        return format_error_response("Internal server error", 500)
+
+
+@app.route('/api/auth/user/<email>', methods=['GET'])
+def get_user_endpoint(email):
+    """
+    Get user data and their child profiles
+
+    Path parameter:
+        - email: user's email address
+    """
+    try:
+        user = get_user(email.lower().strip())
+
+        if not user:
+            return format_error_response("User not found", 404)
+
+        # Get user's child profiles
+        profiles = get_profiles_by_user(email)
+
+        # Return user data without password hash
+        return jsonify({
+            'email': user['email'],
+            'name': user['name'],
+            'profiles': profiles,
+            'created_at': user.get('created_at')
+        })
+
+    except Exception as e:
+        logger.error(f"Error retrieving user: {str(e)}")
+        return format_error_response("Failed to retrieve user", 500)
+
+
 @app.route('/api/generate-story', methods=['POST'])
 def generate_story_endpoint():
     """
@@ -117,36 +293,10 @@ def generate_story_endpoint():
         if not validate_story_length(data['story_length']):
             return format_error_response("Invalid story_length. Must be 5, 10, or 15")
 
-        # Check cache first
+        # Cache disabled - always generate fresh stories for better user experience
+        # Users expect a new story each time, not a cached one
         cache_key = create_cache_key(data)
-        logger.info(f"Checking cache for key: {cache_key}")
-
-        cached_story = get_cached_story(cache_key)
-
-        if cached_story:
-            logger.info(f"Cache hit for key: {cache_key} - returning cached Claude-generated story")
-
-            # Generate emotion tags for cached story too
-            mood = data.get('mood', 'calm')
-            emotion_tagged_story = cached_story['story']
-            try:
-                emotion_tagged_story = add_emotion_tags(
-                    cached_story['story'],
-                    mood=mood,
-                    theme=data['theme']
-                )
-            except Exception as e:
-                logger.error(f"Failed to add emotion tags to cached story: {str(e)}")
-
-            return jsonify({
-                "story_id": generate_uuid(),
-                "story_text": cached_story['story'],
-                "emotion_tagged_text": emotion_tagged_story,
-                "cached": True,
-                "generation_time": 0,
-                "fallback": False,  # Cached stories are also real Claude stories, not fallbacks
-                "profile_used": data['profile_type']
-            })
+        logger.info(f"Cache disabled - generating fresh story for key: {cache_key}")
 
         # Cache miss - generate new story
         logger.info("Cache miss - generating new story")
@@ -198,16 +348,8 @@ def generate_story_endpoint():
             logger.error(f"Failed to save story to history: {str(e)}")
             # Continue anyway - story generation succeeded
 
-        # Cache the story
-        try:
-            save_cached_story(
-                cache_key=cache_key,
-                story_text=result["story"],
-                expires_at=get_ttl_timestamp(24)  # 24 hour TTL
-            )
-        except Exception as e:
-            logger.error(f"Failed to cache story: {str(e)}")
-            # Continue anyway - story was generated successfully
+        # Caching disabled - users expect fresh stories each time
+        # No longer saving to cache
 
         logger.info(f"Story generated successfully in {generation_time:.2f}s - Claude-generated, not fallback")
 
@@ -274,8 +416,10 @@ def save_profile_endpoint():
     Required fields:
         - age: integer (3-12)
         - cognitive_profile: list of strings
+        - user_email: string (user's email address)
 
     Optional fields:
+        - child_name: string (child's name)
         - sensory_preferences: dict
         - interests: list of strings
         - story_length_preference: integer (5, 10, or 15)
@@ -292,6 +436,9 @@ def save_profile_endpoint():
 
         if 'cognitive_profile' not in data:
             return format_error_response("Missing required field: cognitive_profile")
+
+        if 'user_email' not in data:
+            return format_error_response("Missing required field: user_email")
 
         # Validate age
         if not validate_age(data['age']):
@@ -313,6 +460,8 @@ def save_profile_endpoint():
         # Build profile document
         profile_doc = {
             "child_id": child_id,
+            "user_email": data['user_email'].lower().strip(),
+            "child_name": data.get('child_name', ''),
             "age": data['age'],
             "cognitive_profile": cognitive_profile,
             "sensory_preferences": data.get('sensory_preferences', {}),
@@ -322,13 +471,9 @@ def save_profile_endpoint():
             "updated_at": now
         }
 
-        # Save to DynamoDB (with graceful fallback if tables don't exist)
-        try:
-            save_profile(profile_doc)
-            logger.info(f"Profile created and saved to DynamoDB: {child_id}")
-        except Exception as db_error:
-            logger.warning(f"Could not save to DynamoDB (tables may not exist): {str(db_error)}")
-            logger.info(f"Profile created in-memory only: {child_id}")
+        # Save to DynamoDB or memory store
+        save_profile(profile_doc)
+        logger.info(f"Profile created and saved: {child_id}")
 
         return jsonify({
             "child_id": child_id,

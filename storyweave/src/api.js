@@ -5,6 +5,75 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 /**
+ * User signup
+ */
+export const signup = async (email, password, name) => {
+  try {
+    const response = await fetch(`${API_URL}/auth/signup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password, name }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to sign up');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Signup error:', error);
+    throw error;
+  }
+};
+
+/**
+ * User login
+ */
+export const login = async (email, password) => {
+  try {
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to log in');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get user data and profiles
+ */
+export const getUser = async (email) => {
+  try {
+    const response = await fetch(`${API_URL}/auth/user/${encodeURIComponent(email)}`);
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to get user');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Get user error:', error);
+    throw error;
+  }
+};
+
+/**
  * Health check endpoint
  */
 export const healthCheck = async () => {
@@ -55,7 +124,7 @@ const mapStoryLength = (length) => {
 /**
  * Create a child profile
  */
-export const createProfile = async (profileData) => {
+export const createProfile = async (profileData, userEmail) => {
   try {
     // Normalize cognitive profile values to lowercase
     const normalizedConditions = (profileData.conditions || []).map(c => {
@@ -72,6 +141,8 @@ export const createProfile = async (profileData) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        user_email: userEmail,
+        child_name: profileData.childName,
         age: parseInt(profileData.age),
         cognitive_profile: normalizedConditions.length > 0 ? normalizedConditions : ['general'],
         interests: profileData.preferences.favoriteThemes
