@@ -21,11 +21,13 @@ from database import (
     get_profile,
     save_story,
     get_story_history,
+    get_story_by_id,
+    get_story_with_chapters,
     create_user,
     get_user,
     get_profiles_by_user
 )
-from story_generator import create_story, handle_generation_error
+from story_generator import create_story, handle_generation_error, generate_synopsis
 from image_generator import generate_story_images
 from tts_service import generate_audio_for_page
 from emotion_tagger import add_emotion_tags
@@ -335,18 +337,20 @@ def generate_story_endpoint():
         child_id = data.get('child_id', 'anonymous')
 
         try:
-            save_story(
+            story_id = save_story(
                 child_id=child_id,
                 story_text=result["story"],
                 profile_type=data['profile_type'],
                 theme=data['theme'],
                 age=data['age'],
                 interests=data.get('interests', []),
-                story_length=data['story_length']
+                story_length=data['story_length'],
+                images=images if images else None
             )
         except Exception as e:
             logger.error(f"Failed to save story to history: {str(e)}")
             # Continue anyway - story generation succeeded
+            story_id = generate_uuid()  # Fallback ID
 
         # Caching disabled - users expect fresh stories each time
         # No longer saving to cache
@@ -616,6 +620,154 @@ def generate_audio_endpoint():
     except Exception as e:
         logger.error(f"Error generating audio: {str(e)}")
         return format_error_response("Failed to generate audio", 500)
+
+
+@app.route('/api/get-story/<story_id>', methods=['GET'])
+def get_story_endpoint(story_id):
+    """Get a single story by ID, optionally with all chapters"""
+    try:
+        # Check if we should include chapters
+        include_chapters = request.args.get('include_chapters', 'false').lower() == 'true'
+        child_id = request.args.get('child_id')
+
+        if include_chapters and child_id:
+            # Get story with all continuation chapters
+            chapters = get_story_with_chapters(story_id, child_id)
+            if not chapters:
+                return format_error_response("Story not found", 404)
+
+            return jsonify({
+                "story_id": story_id,
+                "chapters": chapters,
+                "chapter_count": len(chapters)
+            })
+        else:
+            # Get single story
+            story = get_story_by_id(story_id)
+            if not story:
+                return format_error_response("Story not found", 404)
+
+            return jsonify(story)
+
+    except Exception as e:
+        logger.error(f"Error getting story: {str(e)}")
+        return format_error_response("Failed to get story", 500)
+
+
+@app.route('/api/generate-synopsis', methods=['POST'])
+def generate_synopsis_endpoint():
+    """Generate a synopsis of a story using Claude Haiku"""
+    try:
+        data = request.json
+
+        if not data or 'story_text' not in data:
+            return format_error_response("story_text is required")
+
+        story_text = data['story_text']
+        max_sentences = data.get('max_sentences', 3)
+
+        logger.info(f"Generating synopsis for story ({len(story_text)} chars)")
+
+        result = generate_synopsis(story_text, max_sentences)
+
+        if not result['success']:
+            return format_error_response(f"Failed to generate synopsis: {result.get('error')}", 500)
+
+        return jsonify({
+            "synopsis": result['synopsis'],
+            "success": True
+        })
+
+    except Exception as e:
+        logger.error(f"Error in synopsis endpoint: {str(e)}")
+        return format_error_response("Failed to generate synopsis", 500)
+
+
+@app.route('/api/continue-story', methods=['POST'])
+def continue_story_endpoint():
+    """Generate a continuation chapter for an existing story"""
+    try:
+        data = request.json
+
+        # Validate required fields
+        required_fields = ['story_id', 'child_id', 'profile_type', 'age', 'story_length']
+        for field in required_fields:
+            if field not in data:
+                return format_error_response(f"Missing required field: {field}")
+
+        # Get the original story
+        original_story = get_story_by_id(data['story_id'])
+        if not original_story:
+            return format_error_response("Original story not found", 404)
+
+        # Generate synopsis of the original story if not provided
+        synopsis = data.get('synopsis')
+        if not synopsis:
+            logger.info("Generating synopsis for original story")
+            synopsis_result = generate_synopsis(original_story['story'])
+            if not synopsis_result['success']:
+                return format_error_response("Failed to generate synopsis", 500)
+            synopsis = synopsis_result['synopsis']
+
+        # Get all existing chapters to determine next chapter number
+        all_chapters = get_story_with_chapters(data['story_id'], data['child_id'])
+        next_chapter_number = len(all_chapters) + 1
+
+        logger.info(f"Generating chapter {next_chapter_number} for story {data['story_id']}")
+
+        # Build continuation prompt
+        theme = data.get('theme', original_story.get('theme', 'adventure'))
+        interests = data.get('interests', original_story.get('interests', []))
+
+        # Create story with context
+        result = create_story(
+            profile_type=data['profile_type'],
+            age=data['age'],
+            theme=f"Continuation of: {synopsis}. New adventure: {theme}",
+            interests=interests,
+            story_length=data['story_length']
+        )
+
+        if not result["success"]:
+            error_msg = handle_generation_error(result.get('error'))
+            return format_error_response(error_msg, 500)
+
+        generation_time = 0  # Track if needed
+
+        # Save the continuation story
+        try:
+            continuation_story_id = save_story(
+                child_id=data['child_id'],
+                story_text=result["story"],
+                profile_type=data['profile_type'],
+                theme=theme,
+                age=data['age'],
+                interests=interests,
+                story_length=data['story_length'],
+                parent_story_id=data['story_id'],
+                chapter_number=next_chapter_number,
+                synopsis=synopsis
+            )
+        except Exception as e:
+            logger.error(f"Failed to save continuation story: {str(e)}")
+            return format_error_response("Failed to save continuation", 500)
+
+        logger.info(f"Continuation story saved: {continuation_story_id}")
+
+        return jsonify({
+            "story_id": continuation_story_id,
+            "parent_story_id": data['story_id'],
+            "chapter_number": next_chapter_number,
+            "story_text": result["story"],
+            "synopsis": synopsis,
+            "profile_used": data['profile_type'],
+            "generation_time": generation_time,
+            "success": True
+        })
+
+    except Exception as e:
+        logger.error(f"Error in continue-story endpoint: {str(e)}")
+        return format_error_response("Failed to continue story", 500)
 
 
 if __name__ == '__main__':

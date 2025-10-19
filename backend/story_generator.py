@@ -213,6 +213,79 @@ def handle_generation_error(error):
     return error_messages.get(error_type, "An error occurred. Please try again.")
 
 
+def generate_synopsis(story_text, max_sentences=3):
+    """
+    Generate a brief synopsis of a story using Claude Haiku
+
+    Args:
+        story_text: The full story text to summarize
+        max_sentences: Maximum number of sentences in synopsis (default 3)
+
+    Returns:
+        dict with 'success', 'synopsis', and optional 'error' keys
+    """
+    logger.info(f"Generating synopsis for story ({len(story_text)} chars)")
+
+    prompt = f"""Please write a brief {max_sentences}-sentence synopsis of this children's story.
+Focus on the main character, their goal or challenge, and how it resolves.
+Keep it simple and suitable for continuing the story in a new chapter.
+
+Story:
+{story_text}
+
+Synopsis:"""
+
+    # Use cheap tier (Haiku) for synopsis generation
+    model_id = MODEL_TIERS['cheap']
+    logger.info(f"Using model for synopsis: {model_id}")
+
+    body = json.dumps({
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 200,
+        "temperature": 0.7,
+        "messages": [
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+    })
+
+    try:
+        response = bedrock_runtime.invoke_model(
+            modelId=model_id,
+            body=body
+        )
+
+        response_body = json.loads(response.get('body').read())
+        synopsis = response_body['content'][0]['text'].strip()
+
+        logger.info(f"Synopsis generated successfully ({len(synopsis)} chars)")
+
+        return {
+            "success": True,
+            "synopsis": synopsis
+        }
+
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        error_msg = str(e)
+        logger.error(f"AWS Bedrock error generating synopsis: {error_code} - {error_msg}")
+
+        return {
+            "success": False,
+            "synopsis": "",
+            "error": error_msg
+        }
+    except Exception as e:
+        logger.error(f"Unexpected error generating synopsis: {str(e)}")
+        return {
+            "success": False,
+            "synopsis": "",
+            "error": str(e)
+        }
+
+
 if __name__ == "__main__":
     # Test story generation
     print("Testing story generation...")

@@ -244,7 +244,7 @@ export const generateStory = async (profile, storyParams, imageConfig = null) =>
  */
 export const getStoryHistory = async (childId) => {
   try {
-    const response = await fetch(`${API_URL}/story-history/${childId}`);
+    const response = await fetch(`${API_URL}/get-history?child_id=${childId}`);
 
     if (!response.ok) {
       const error = await response.json();
@@ -315,6 +315,112 @@ export const generateAudio = async (text, mood = 'calm', theme = '', voiceId = n
     };
   } catch (error) {
     console.error('Generate audio error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get a single story by ID
+ */
+export const getStory = async (storyId, includeChapters = false, childId = null) => {
+  try {
+    let url = `${API_URL}/get-story/${storyId}`;
+    const params = new URLSearchParams();
+
+    if (includeChapters && childId) {
+      params.append('include_chapters', 'true');
+      params.append('child_id', childId);
+    }
+
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to get story');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Get story error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Generate a synopsis for a story
+ */
+export const generateSynopsis = async (storyText, maxSentences = 3) => {
+  try {
+    const response = await fetch(`${API_URL}/generate-synopsis`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        story_text: storyText,
+        max_sentences: maxSentences
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to generate synopsis');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Generate synopsis error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Continue an existing story with a new chapter
+ */
+export const continueStory = async (storyId, childId, profile, storyParams) => {
+  try {
+    const response = await fetch(`${API_URL}/continue-story`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        story_id: storyId,
+        child_id: childId,
+        profile_type: mapProfileType(profile.conditions),
+        age: parseInt(profile.age),
+        story_length: mapStoryLength(storyParams.length),
+        theme: storyParams.genre || 'adventure',
+        interests: profile.preferences.favoriteThemes
+          ? profile.preferences.favoriteThemes.split(',').map(t => t.trim()).filter(t => t)
+          : []
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to continue story');
+    }
+
+    const data = await response.json();
+
+    console.log('✅ Story continuation generated successfully:');
+    console.log(`   Chapter: ${data.chapter_number}`);
+    console.log(`   Parent story: ${data.parent_story_id}`);
+
+    return {
+      story: data.story_text,
+      storyId: data.story_id,
+      chapterNumber: data.chapter_number,
+      parentStoryId: data.parent_story_id,
+      synopsis: data.synopsis
+    };
+  } catch (error) {
+    console.error('Continue story error:', error);
     throw error;
   }
 };

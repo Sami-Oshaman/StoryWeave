@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Moon, Sun, Volume2, VolumeX, ChevronLeft, ChevronRight, Sparkles, Play, Pause } from 'lucide-react';
-import { signup, login, getUser, createProfile, generateStory, generateAudio } from './api';
+import { Moon, Sun, Volume2, VolumeX, ChevronLeft, ChevronRight, Sparkles, Play, Pause, BookOpen, PlusCircle } from 'lucide-react';
+import { signup, login, getUser, createProfile, generateStory, generateAudio, getStoryHistory, getStory, continueStory } from './api';
 
 // Login/Signup Screen
 const AuthScreen = ({ onLogin }) => {
@@ -356,7 +356,7 @@ const ProfileSetup = ({ onComplete, user, existingProfile = null }) => {
 };
 
 // Story Generation Screen (from App_1.jsx)
-const StoryGenerator = ({ profile, onGenerate, onEditProfile, user }) => {
+const StoryGenerator = ({ profile, onGenerate, onEditProfile, onViewHistory, user }) => {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [storyParams, setStoryParams] = useState({
@@ -396,9 +396,20 @@ const StoryGenerator = ({ profile, onGenerate, onEditProfile, user }) => {
           <ChevronLeft size={18} />
           Edit {profile.childName}'s Profile
         </button>
-        <span className="px-4 py-2 bg-purple-600 text-white rounded-full text-sm font-medium">
-          {profile.childName}, age {profile.age}
-        </span>
+        <div className="flex items-center gap-3">
+          {onViewHistory && (
+            <button
+              onClick={onViewHistory}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600/50 hover:bg-purple-600 text-white rounded-xl transition-colors text-sm"
+            >
+              <BookOpen size={18} />
+              Story Library
+            </button>
+          )}
+          <span className="px-4 py-2 bg-purple-600 text-white rounded-full text-sm font-medium">
+            {profile.childName}, age {profile.age}
+          </span>
+        </div>
       </div>
 
       <div className="text-center mb-8">
@@ -521,6 +532,135 @@ const StoryGenerator = ({ profile, onGenerate, onEditProfile, user }) => {
           </p>
         </div>
       )}
+    </div>
+  );
+};
+
+// Parent Dashboard - Story History
+const ParentDashboard = ({ profile, user, onReplayStory, onContinueStory, onNewStory }) => {
+  const [stories, setStories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchStories = async () => {
+      if (!profile?.child_id) return;
+
+      try {
+        setLoading(true);
+        const data = await getStoryHistory(profile.child_id);
+        setStories(data.stories || []);
+      } catch (err) {
+        setError('Failed to load story history');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStories();
+  }, [profile]);
+
+  const formatDate = (timestamp) => {
+    return new Date(timestamp).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const getStoryTitle = (story) => {
+    // Get first line or first 50 chars as title
+    const firstLine = story.story.split('\n')[0];
+    return firstLine.length > 50 ? firstLine.substring(0, 47) + '...' : firstLine;
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-2">
+              📚 Story Library
+            </h1>
+            <p className="text-purple-200">
+              {profile?.childName}'s story collection
+            </p>
+          </div>
+          <button
+            onClick={onNewStory}
+            className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition-colors"
+          >
+            <PlusCircle size={20} />
+            New Story
+          </button>
+        </div>
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-500/20 border border-red-500 rounded-xl text-red-200">
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="text-center text-purple-200 py-12">
+            Loading story library...
+          </div>
+        ) : stories.length === 0 ? (
+          <div className="text-center py-12">
+            <BookOpen size={64} className="mx-auto mb-4 text-purple-300" />
+            <p className="text-xl text-purple-200 mb-4">
+              No stories yet! Let's create the first one.
+            </p>
+            <button
+              onClick={onNewStory}
+              className="px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition-colors"
+            >
+              Create First Story
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {stories.map((story) => (
+              <div
+                key={story.story_id}
+                className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-purple-700/30 hover:border-purple-500/50 transition-all"
+              >
+                <div className="mb-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="text-lg font-semibold text-white line-clamp-2">
+                      {getStoryTitle(story)}
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-purple-300">
+                    <span className="px-2 py-1 bg-purple-700/50 rounded">
+                      {story.theme}
+                    </span>
+                    <span>{formatDate(story.timestamp)}</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => onReplayStory(story)}
+                    className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors text-sm"
+                  >
+                    <Play size={16} className="inline mr-1" />
+                    Replay
+                  </button>
+                  <button
+                    onClick={() => onContinueStory(story)}
+                    className="flex-1 px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white rounded-lg transition-colors text-sm"
+                  >
+                    <Sparkles size={16} className="inline mr-1" />
+                    Continue
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -822,6 +962,54 @@ export default function StoryWeaveApp() {
     setScreen('profile');
   };
 
+  const handleReplayStory = (savedStory) => {
+    // Convert saved story format to display format
+    setStory({
+      story: savedStory.story,
+      images: savedStory.images || [],
+      metadata: {
+        story_id: savedStory.story_id,
+        profile_type: savedStory.profile_type
+      }
+    });
+    setStoryParams({
+      genre: savedStory.theme,
+      length: 'medium',  // Default
+      mood: 'calm'
+    });
+    setScreen('display');
+  };
+
+  const handleContinueStory = async (savedStory) => {
+    try {
+      // Generate continuation
+      const continuation = await continueStory(
+        savedStory.story_id,
+        profile.child_id,
+        profile,
+        storyParams || { genre: savedStory.theme, length: 'medium', mood: 'calm' }
+      );
+
+      setStory({
+        story: continuation.story,
+        images: [],
+        metadata: {
+          story_id: continuation.storyId,
+          chapter_number: continuation.chapterNumber,
+          parent_story_id: continuation.parentStoryId
+        }
+      });
+      setScreen('display');
+    } catch (error) {
+      console.error('Failed to continue story:', error);
+      alert('Failed to continue story. Please try again.');
+    }
+  };
+
+  const handleViewHistory = () => {
+    setScreen('history');
+  };
+
   return (
     <div className={darkMode ? 'dark' : ''}>
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
@@ -878,7 +1066,18 @@ export default function StoryWeaveApp() {
             profile={profile}
             onGenerate={handleStoryGenerate}
             onEditProfile={handleEditProfile}
+            onViewHistory={handleViewHistory}
             user={user}
+          />
+        )}
+
+        {screen === 'history' && profile && (
+          <ParentDashboard
+            profile={profile}
+            user={user}
+            onReplayStory={handleReplayStory}
+            onContinueStory={handleContinueStory}
+            onNewStory={() => setScreen('generate')}
           />
         )}
 
@@ -887,7 +1086,7 @@ export default function StoryWeaveApp() {
             story={story}
             profile={profile}
             storyParams={storyParams}
-            onBack={() => setScreen('generate')}
+            onBack={() => setScreen('history')}
             onNewStory={() => setScreen('generate')}
           />
         )}

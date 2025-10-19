@@ -165,14 +165,34 @@ def get_profile(child_id):
         return None
 
 
-def save_story(child_id, story_text, profile_type, theme, age, interests, story_length):
-    """Save a story to DynamoDB"""
+def save_story(child_id, story_text, profile_type, theme, age, interests, story_length,
+               parent_story_id=None, chapter_number=1, synopsis=None, images=None):
+    """Save a story to DynamoDB
+
+    Args:
+        child_id: Child profile ID
+        story_text: The story content
+        profile_type: Cognitive profile (adhd, autism, anxiety, general)
+        theme: Story theme
+        age: Child's age
+        interests: List of interests
+        story_length: Story length in minutes
+        parent_story_id: Optional ID of the original story if this is a continuation
+        chapter_number: Chapter number (1 for original, 2+ for continuations)
+        synopsis: Optional synopsis of the story
+        images: Optional list of image data
+
+    Returns:
+        story_id: The generated story ID
+    """
     from utils import generate_uuid, get_current_timestamp
     from decimal import Decimal
 
     table = get_table('stories')
+    story_id = generate_uuid()
+
     story_data = {
-        'story_id': generate_uuid(),
+        'story_id': story_id,
         'child_id': child_id,
         'story': story_text,
         'profile_type': profile_type,
@@ -180,20 +200,72 @@ def save_story(child_id, story_text, profile_type, theme, age, interests, story_
         'age': age,
         'interests': interests,
         'story_length': Decimal(str(story_length)),
+        'chapter_number': chapter_number,
         'timestamp': get_current_timestamp()
     }
 
+    # Add optional fields if provided
+    if parent_story_id:
+        story_data['parent_story_id'] = parent_story_id
+    if synopsis:
+        story_data['synopsis'] = synopsis
+    if images:
+        story_data['images'] = images
+
     try:
         table.put_item(Item=story_data)
-        logger.info(f"Story saved: {story_data['story_id']}")
-        return True
+        logger.info(f"Story saved: {story_id} (chapter {chapter_number})")
+        return story_id
     except ClientError as e:
         logger.error(f"Error saving story: {str(e)}")
         raise
 
 
+def get_story_by_id(story_id):
+    """Get a single story by ID"""
+    table = get_table('stories')
+    try:
+        response = table.get_item(Key={'story_id': story_id})
+        return response.get('Item')
+    except ClientError as e:
+        logger.error(f"Error getting story {story_id}: {str(e)}")
+        return None
+
+
+def get_story_with_chapters(story_id, child_id):
+    """Get a story and all its continuation chapters
+
+    Args:
+        story_id: The original story ID
+        child_id: Child profile ID
+
+    Returns:
+        List of stories ordered by chapter number
+    """
+    table = get_table('stories')
+
+    # Get the original story
+    original_story = get_story_by_id(story_id)
+    if not original_story:
+        return []
+
+    # Get all stories for this child
+    all_stories = get_story_history(child_id, limit=50)
+
+    # Filter for stories that are continuations of this one
+    chapters = [original_story]
+    for story in all_stories:
+        if story.get('parent_story_id') == story_id:
+            chapters.append(story)
+
+    # Sort by chapter number
+    chapters.sort(key=lambda x: x.get('chapter_number', 1))
+
+    return chapters
+
+
 def get_story_history(child_id, limit=10):
-    """Get story history for a child"""
+    """Get story history for a child (only original stories, not continuations)"""
     table = get_table('stories')
     try:
         response = table.query(
@@ -201,9 +273,15 @@ def get_story_history(child_id, limit=10):
             KeyConditionExpression='child_id = :child_id',
             ExpressionAttributeValues={':child_id': child_id},
             ScanIndexForward=False,
-            Limit=limit
+            Limit=limit * 2  # Get more to filter out continuations
         )
-        return response.get('Items', [])
+
+        # Filter to only show original stories (no parent_story_id)
+        # Stories without parent_story_id are original stories (chapter 1 or legacy stories)
+        stories = response.get('Items', [])
+        original_stories = [s for s in stories if not s.get('parent_story_id')]
+
+        return original_stories[:limit]
     except ClientError as e:
         logger.error(f"Error getting story history: {str(e)}")
         return []

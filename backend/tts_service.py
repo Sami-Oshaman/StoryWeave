@@ -22,9 +22,9 @@ client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
 VOICE_PROFILES = {
     # Calm, gentle voices
     "calm": {
-        "default": "21m00Tcm4TlvDq8ikWAM",  # Rachel - warm, natural storytelling voice
+        "default": "pNInz6obpgDQGcFmaJgB",  # Bill - warm, natural storytelling voice
         "space": "29vD33N1CtxCmqQRPOHJ",    # Drew - calm, soothing narrator
-        "animals": "21m00Tcm4TlvDq8ikWAM",  # Rachel - gentle for animal stories
+        "animals": "pNInz6obpgDQGcFmaJgB",  # Bill - gentle for animal stories
         "adventure": "oWAxZDx7w5VEj9dCyTzz", # Grace - soft, expressive
     },
     # Playful, energetic voices

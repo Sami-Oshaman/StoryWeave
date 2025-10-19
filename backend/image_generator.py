@@ -21,7 +21,45 @@ def get_gemini_client():
 IMAGE_MODEL_ID = 'gemini-2.5-flash-image'
 
 
-def create_child_friendly_prompt(story_excerpt, age, theme):
+def extract_character_description(story_text):
+    """
+    Extract character description from the beginning of the story for consistency
+
+    Args:
+        story_text: Full story text
+
+    Returns:
+        str: Concise character description or empty string
+    """
+    import re
+
+    # Look for character descriptions in the first 500 characters
+    intro = story_text[:500].lower()
+
+    # Common character description patterns
+    character_desc = ""
+
+    # Look for main character with descriptors
+    patterns = [
+        r"(a|an|the) (little|young|small|tiny|brave|curious) (\w+) (named|called) (\w+)",
+        r"(\w+) (was|is) a (little|young|small|tiny|brave|curious) (\w+)",
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, intro)
+        if match:
+            # Extract key descriptive words
+            words = match.group(0).split()
+            # Get adjectives and nouns (skip articles)
+            descriptors = [w for w in words if w not in ['a', 'an', 'the', 'was', 'is', 'named', 'called']]
+            if len(descriptors) >= 2:
+                character_desc = " ".join(descriptors[:4])  # Max 4 words
+                break
+
+    return character_desc
+
+
+def create_child_friendly_prompt(story_excerpt, age, theme, character_description=""):
     """
     Create a child-friendly image prompt from story excerpt
 
@@ -29,6 +67,7 @@ def create_child_friendly_prompt(story_excerpt, age, theme):
         story_excerpt: Text from the story to illustrate
         age: Child's age (for age-appropriate imagery)
         theme: Story theme
+        character_description: Concise description of main character(s) for consistency
 
     Returns:
         str: Optimized prompt for image generation
@@ -47,13 +86,18 @@ def create_child_friendly_prompt(story_excerpt, age, theme):
     # Safety constraints
     safety = "IMPORTANT: No scary elements, no violence, no weapons, no dark themes. Only positive, uplifting, child-safe imagery."
 
+    # Add character consistency instruction if we have a description
+    character_note = ""
+    if character_description:
+        character_note = f"\nCharacter consistency: Main character is {character_description}. Keep this appearance consistent."
+
     # Create comprehensive prompt
     prompt = f"""Create a beautiful children's book illustration for this scene:
 
 {story_excerpt}
 
 Style: {style}
-
+{character_note}
 {safety}
 
 The illustration should be warm, inviting, and appropriate for a {age}-year-old child's bedtime story."""
@@ -161,6 +205,11 @@ def generate_story_images(story_text, age, theme, num_images=3):
     """
     images = []
 
+    # Extract character description once for consistency across all images
+    character_description = extract_character_description(story_text)
+    if character_description:
+        logger.info(f"Extracted character description for consistency: '{character_description}'")
+
     # Split story into paragraphs
     paragraphs = [p.strip() for p in story_text.split('\n\n') if p.strip()]
 
@@ -183,8 +232,8 @@ def generate_story_images(story_text, age, theme, num_images=3):
     for idx, para_idx in enumerate(selected_indices):
         paragraph = paragraphs[para_idx]
 
-        # Create child-friendly prompt
-        prompt = create_child_friendly_prompt(paragraph, age, theme)
+        # Create child-friendly prompt with character description for consistency
+        prompt = create_child_friendly_prompt(paragraph, age, theme, character_description)
 
         logger.info(f"Generating image {idx + 1}/{len(selected_indices)} for paragraph {para_idx}")
 
@@ -196,7 +245,8 @@ def generate_story_images(story_text, age, theme, num_images=3):
                 "image_index": idx,
                 "paragraph_index": para_idx,
                 "image_data": result["image_data"],
-                "prompt": result["prompt"]
+                "prompt": result["prompt"],
+                "character_description": character_description
             })
         else:
             logger.error(f"Failed to generate image {idx + 1}: {result.get('error')}")
