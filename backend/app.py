@@ -23,6 +23,7 @@ from database import (
     get_story_history
 )
 from story_generator import create_story, handle_generation_error
+from image_generator import generate_story_images
 from utils import (
     create_cache_key,
     generate_uuid,
@@ -39,7 +40,18 @@ app = Flask(__name__)
 
 # Configure CORS
 frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
-CORS(app, resources={r"/api/*": {"origins": [frontend_url, "http://localhost:3000"]}})
+CORS(app, resources={
+    r"/api/*": {
+        "origins": [
+            frontend_url,
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://localhost:5174"
+        ],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # Configure logging
 log_level = os.environ.get('LOG_LEVEL', 'INFO')
@@ -74,6 +86,8 @@ def generate_story_endpoint():
     Optional fields:
         - child_id: string (for history tracking)
         - interests: list of strings
+        - generate_images: boolean (whether to generate images, default False)
+        - num_images: integer (number of images to generate, default 3)
     """
     try:
         data = request.json
@@ -107,13 +121,15 @@ def generate_story_endpoint():
         cached_story = get_cached_story(cache_key)
 
         if cached_story:
-            logger.info(f"Cache hit for key: {cache_key}")
+            logger.info(f"Cache hit for key: {cache_key} - returning cached Claude-generated story")
 
             return jsonify({
                 "story_id": generate_uuid(),
                 "story_text": cached_story['story'],
                 "cached": True,
-                "generation_time": 0
+                "generation_time": 0,
+                "fallback": False,  # Cached stories are also real Claude stories, not fallbacks
+                "profile_used": data['profile_type']
             })
 
         # Cache miss - generate new story
@@ -177,14 +193,39 @@ def generate_story_endpoint():
             logger.error(f"Failed to cache story: {str(e)}")
             # Continue anyway - story was generated successfully
 
-        logger.info(f"Story generated successfully in {generation_time:.2f}s")
+        logger.info(f"Story generated successfully in {generation_time:.2f}s - Claude-generated, not fallback")
+
+        # Generate images if requested
+        images = []
+        if data.get('generate_images', False):
+            # Calculate num_images based on actual paragraph count and pages_per_image
+            pages_per_image = data.get('pages_per_image', 4)
+            paragraphs = [p.strip() for p in result["story"].split('\n\n') if p.strip()]
+            num_paragraphs = len(paragraphs)
+            num_images = max(1, num_paragraphs // pages_per_image)
+
+            logger.info(f"Story has {num_paragraphs} paragraphs, generating {num_images} images (1 per {pages_per_image} pages)")
+
+            try:
+                images = generate_story_images(
+                    story_text=result["story"],
+                    age=data['age'],
+                    theme=data['theme'],
+                    num_images=num_images
+                )
+                logger.info(f"Generated {len(images)} images successfully")
+            except Exception as e:
+                logger.error(f"Failed to generate images: {str(e)}")
+                # Continue anyway - story was generated successfully
 
         return jsonify({
             "story_id": story_id,
             "story_text": result["story"],
             "profile_used": data['profile_type'],
             "generation_time": generation_time,
-            "cached": False
+            "cached": False,
+            "fallback": False,  # Explicitly indicate this is NOT a fallback story
+            "images": images  # List of base64-encoded images with metadata
         })
 
     except Exception as e:

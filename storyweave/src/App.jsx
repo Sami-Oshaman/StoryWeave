@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Moon, Sun, Volume2, VolumeX, ChevronLeft, ChevronRight, Sparkles, Star } from 'lucide-react';
+import { createProfile, generateStory, healthCheck } from './api';
 
 // Child Profile Screen
 const ProfileSetup = ({ onComplete }) => {
@@ -15,9 +16,23 @@ const ProfileSetup = ({ onComplete }) => {
     }
   });
 
-  const handleSubmit = (e) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onComplete(profile);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await createProfile(profile);
+      onComplete({ ...profile, child_id: result.child_id });
+    } catch (err) {
+      setError(err.message || 'Failed to create profile');
+      console.error('Profile creation error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleCondition = (condition) => {
@@ -186,12 +201,25 @@ const ProfileSetup = ({ onComplete }) => {
             />
           </div>
 
+          {error && (
+            <div className="p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-200 mt-4">
+              {error}
+            </div>
+          )}
+
           <button
             type="submit"
-            disabled={!profile.childName || !profile.age}
+            disabled={!profile.childName || !profile.age || loading}
             className="w-full py-4 px-6 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 disabled:cursor-not-allowed text-white text-xl font-semibold rounded-xl transition-colors mt-6 focus:outline-none focus:ring-4 focus:ring-purple-500/50"
           >
-            Create Profile & Continue
+            {loading ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                Creating Profile...
+              </div>
+            ) : (
+              'Create Profile & Continue'
+            )}
           </button>
         </div>
       </form>
@@ -202,6 +230,7 @@ const ProfileSetup = ({ onComplete }) => {
 // Story Generation Screen
 const StoryGenerator = ({ profile, onGenerate, onBack }) => {
   const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState(null);
   const [storyParams, setStoryParams] = useState({
     length: 'medium',
     tonightsPacing: profile.preferences.pacing,
@@ -209,13 +238,36 @@ const StoryGenerator = ({ profile, onGenerate, onBack }) => {
     characters: '',
     mood: 'calm'
   });
+  const [imageConfig, setImageConfig] = useState({
+    enabled: true,  // Enable images by default
+    pagesPerImage: 4  // Generate one image every 4 pages
+  });
 
   const handleGenerate = async () => {
     setGenerating(true);
-    setTimeout(() => {
-      onGenerate({ profile, storyParams });
+    setError(null);
+
+    try {
+      // Pass pagesPerImage to backend so it can calculate based on actual story length
+      const imageSettings = imageConfig.enabled ? {
+        enabled: true,
+        pagesPerImage: imageConfig.pagesPerImage
+      } : { enabled: false };
+
+      const result = await generateStory(profile, storyParams, imageSettings);
+      onGenerate({
+        story: result.story,
+        images: result.images || [],
+        metadata: result.metadata,
+        profile,
+        storyParams
+      });
+    } catch (err) {
+      setError(err.message || 'Failed to generate story');
+      console.error('Story generation error:', err);
+    } finally {
       setGenerating(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -348,15 +400,57 @@ const StoryGenerator = ({ profile, onGenerate, onBack }) => {
             </p>
           </div>
 
+          {/* Image Configuration */}
+          <div className="bg-white/5 border-2 border-purple-700/50 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={imageConfig.enabled}
+                  onChange={(e) => setImageConfig({...imageConfig, enabled: e.target.checked})}
+                  className="w-5 h-5 border-2 border-purple-600 bg-white/5 checked:bg-purple-600 focus:ring-2 focus:ring-purple-500/20 cursor-pointer rounded"
+                />
+                <span className="text-lg text-purple-100 font-medium">
+                  Generate AI Images
+                </span>
+              </label>
+            </div>
+
+            {imageConfig.enabled && (
+              <div>
+                <label className="block text-sm text-purple-200 mb-2">
+                  Images per {imageConfig.pagesPerImage} pages
+                </label>
+                <input
+                  type="range"
+                  min="2"
+                  max="8"
+                  value={imageConfig.pagesPerImage}
+                  onChange={(e) => setImageConfig({...imageConfig, pagesPerImage: parseInt(e.target.value)})}
+                  className="w-full h-2 bg-purple-700/30 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                />
+                <p className="text-xs text-purple-300 mt-2">
+                  One image every {imageConfig.pagesPerImage} pages (calculated based on actual story length)
+                </p>
+              </div>
+            )}
+          </div>
+
+          {error && (
+            <div className="p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-200 mt-4">
+              {error}
+            </div>
+          )}
+
           <button
             onClick={handleGenerate}
             disabled={generating}
-            className="w-full py-4 px-6 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 text-white text-xl font-semibold rounded-xl transition-colors mt-6 focus:outline-none focus:ring-4 focus:ring-purple-500/50 flex items-center justify-center gap-2"
+            className="w-full py-4 px-6 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 disabled:cursor-not-allowed text-white text-xl font-semibold rounded-xl transition-colors mt-6 focus:outline-none focus:ring-4 focus:ring-purple-500/50 flex items-center justify-center gap-2"
           >
             {generating ? (
               <>
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                Weaving your story...
+                Weaving your story... (30-40 seconds)
               </>
             ) : (
               <>
@@ -384,24 +478,68 @@ const StoryGenerator = ({ profile, onGenerate, onBack }) => {
 };
 
 // Story Display Screen
-const StoryDisplay = ({ story, profile, onBack, onNewStory }) => {
+const StoryDisplay = ({ storyData, profile, onBack, onNewStory }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
 
-  const pages = [
-    {
-      text: "Once upon a time, in a peaceful forest where the moonlight danced through the leaves, there lived a little fox named Luna.",
-      image: "🦊🌙"
-    },
-    {
-      text: "Luna loved to explore, but tonight she felt extra sleepy. The stars twinkled softly above, each one saying 'goodnight' in its own special way.",
-      image: "⭐✨"
-    },
-    {
-      text: "As Luna curled up in her cozy den, she heard the gentle hoot of her friend, the wise old owl. 'Sweet dreams, little one,' hooted the owl.",
-      image: "🦉💤"
-    },
+  // Split story into pages and map images
+  const pages = React.useMemo(() => {
+    const story = storyData.story || '';
+    const images = storyData.images || [];
+
+    // Create image lookup by paragraph index
+    const imageMap = {};
+    images.forEach(img => {
+      imageMap[img.paragraph_index] = img.image_data;
+    });
+
+    // Split by double newlines (paragraphs)
+    const paragraphs = story.split(/\n\n+/).filter(p => p.trim());
+
+    // If no paragraphs found, split by single newline
+    if (paragraphs.length <= 1) {
+      const lines = story.split('\n').filter(l => l.trim());
+      let currentImage = null;
+      let hasCurrentAiImage = false;
+
+      return lines.map((line, index) => {
+        // Update current image if there's a new one at this index
+        if (imageMap[index]) {
+          currentImage = imageMap[index];
+          hasCurrentAiImage = true;
+        }
+
+        // Use current image or fallback emojis
+        return {
+          text: line.trim(),
+          image: currentImage || (index === 0 ? "✨" : index === lines.length - 1 ? "😴" : "📖"),
+          hasAiImage: hasCurrentAiImage
+        };
+      });
+    }
+
+    // Map paragraphs to pages with AI images carried forward
+    let currentImage = null;
+    let hasCurrentAiImage = false;
+
+    return paragraphs.map((para, index) => {
+      // Update current image if there's a new one at this index
+      if (imageMap[index]) {
+        currentImage = imageMap[index];
+        hasCurrentAiImage = true;
+      }
+
+      // Use current image or fallback emojis
+      return {
+        text: para.trim(),
+        image: currentImage || (index === 0 ? "✨" : index === paragraphs.length - 1 ? "😴🌟" : "📖"),
+        hasAiImage: hasCurrentAiImage
+      };
+    });
+  }, [storyData.story, storyData.images]);
+
+  const dummyPages = [
     {
       text: "Luna closed her eyes and drifted off to sleep, dreaming of tomorrow's adventures. The end.",
       image: "😴🌟"
@@ -456,8 +594,16 @@ const StoryDisplay = ({ story, profile, onBack, onNewStory }) => {
       <div className="bg-white/5 backdrop-blur-md rounded-3xl p-12 border border-purple-800/30 min-h-[500px] flex flex-col justify-center items-center relative mb-6">
         <div className="text-center space-y-8">
           {/* Image/Emoji Display */}
-          <div className="text-8xl mb-8">
-            {pages[currentPage].image}
+          <div className="mb-8 flex justify-center">
+            {pages[currentPage].hasAiImage ? (
+              <img
+                src={`data:image/png;base64,${pages[currentPage].image}`}
+                alt="Story illustration"
+                className="max-w-xl max-h-96 rounded-2xl shadow-2xl border-4 border-purple-600/30"
+              />
+            ) : (
+              <div className="text-8xl">{pages[currentPage].image}</div>
+            )}
           </div>
 
           {/* Story Text */}
@@ -596,7 +742,7 @@ export default function StoryWeaveApp() {
         
         {screen === 'display' && story && (
           <StoryDisplay
-            story={story}
+            storyData={story}
             profile={profile}
             onBack={() => setScreen('generate')}
             onNewStory={() => setScreen('generate')}
