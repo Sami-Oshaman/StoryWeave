@@ -491,6 +491,7 @@ const StoryDisplay = ({ storyData, profile, onBack, onNewStory }) => {
   // Split story into pages and map images
   const pages = React.useMemo(() => {
     const story = storyData.story || '';
+    const emotionTaggedStory = storyData.emotionTaggedStory || story;
     const images = storyData.images || [];
 
     // Create image lookup by paragraph index
@@ -499,12 +500,14 @@ const StoryDisplay = ({ storyData, profile, onBack, onNewStory }) => {
       imageMap[img.paragraph_index] = img.image_data;
     });
 
-    // Split by double newlines (paragraphs)
+    // Split BOTH versions by paragraphs to keep them in sync
     const paragraphs = story.split(/\n\n+/).filter(p => p.trim());
+    const emotionParagraphs = emotionTaggedStory.split(/\n\n+/).filter(p => p.trim());
 
     // If no paragraphs found, split by single newline
     if (paragraphs.length <= 1) {
       const lines = story.split('\n').filter(l => l.trim());
+      const emotionLines = emotionTaggedStory.split('\n').filter(l => l.trim());
       let currentImage = null;
       let hasCurrentAiImage = false;
 
@@ -517,7 +520,8 @@ const StoryDisplay = ({ storyData, profile, onBack, onNewStory }) => {
 
         // Use current image or fallback emojis
         return {
-          text: line.trim(),
+          text: line.trim(),  // Clean text for display
+          emotionText: emotionLines[index]?.trim() || line.trim(),  // Emotion-tagged for TTS
           image: currentImage || (index === 0 ? "✨" : index === lines.length - 1 ? "😴" : "📖"),
           hasAiImage: hasCurrentAiImage
         };
@@ -537,12 +541,13 @@ const StoryDisplay = ({ storyData, profile, onBack, onNewStory }) => {
 
       // Use current image or fallback emojis
       return {
-        text: para.trim(),
+        text: para.trim(),  // Clean text for display
+        emotionText: emotionParagraphs[index]?.trim() || para.trim(),  // Emotion-tagged for TTS
         image: currentImage || (index === 0 ? "✨" : index === paragraphs.length - 1 ? "😴🌟" : "📖"),
         hasAiImage: hasCurrentAiImage
       };
     });
-  }, [storyData.story, storyData.images]);
+  }, [storyData.story, storyData.emotionTaggedStory, storyData.images]);
 
   // Generate and auto-play audio when page changes
   useEffect(() => {
@@ -556,13 +561,17 @@ const StoryDisplay = ({ storyData, profile, onBack, onNewStory }) => {
       }
 
       // Generate new audio with mood and theme from story
+      // Use emotion-tagged text for TTS, not the display text
       setIsLoadingAudio(true);
       try {
         const mood = storyData?.storyParams?.mood || 'calm';
         const theme = storyData?.storyParams?.genre || '';
 
+        // Use emotionText (with tags) for TTS, not text (clean version)
+        const textForTTS = pages[currentPage].emotionText || pages[currentPage].text;
+
         const { audioUrl } = await generateAudio(
-          pages[currentPage].text,
+          textForTTS,
           mood,
           theme
         );

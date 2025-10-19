@@ -25,6 +25,7 @@ from database import (
 from story_generator import create_story, handle_generation_error
 from image_generator import generate_story_images
 from tts_service import generate_audio_for_page
+from emotion_tagger import add_emotion_tags
 from utils import (
     create_cache_key,
     generate_uuid,
@@ -125,9 +126,22 @@ def generate_story_endpoint():
         if cached_story:
             logger.info(f"Cache hit for key: {cache_key} - returning cached Claude-generated story")
 
+            # Generate emotion tags for cached story too
+            mood = data.get('mood', 'calm')
+            emotion_tagged_story = cached_story['story']
+            try:
+                emotion_tagged_story = add_emotion_tags(
+                    cached_story['story'],
+                    mood=mood,
+                    theme=data['theme']
+                )
+            except Exception as e:
+                logger.error(f"Failed to add emotion tags to cached story: {str(e)}")
+
             return jsonify({
                 "story_id": generate_uuid(),
                 "story_text": cached_story['story'],
+                "emotion_tagged_text": emotion_tagged_story,
                 "cached": True,
                 "generation_time": 0,
                 "fallback": False,  # Cached stories are also real Claude stories, not fallbacks
@@ -197,6 +211,22 @@ def generate_story_endpoint():
 
         logger.info(f"Story generated successfully in {generation_time:.2f}s - Claude-generated, not fallback")
 
+        # Generate emotion-tagged version for TTS (using Claude Haiku)
+        mood = data.get('mood', 'calm')  # Get mood from request if available
+        emotion_tagged_story = None
+        try:
+            logger.info("Generating emotion-tagged version for TTS narration")
+            emotion_tagged_story = add_emotion_tags(
+                result["story"],
+                mood=mood,
+                theme=data['theme']
+            )
+            logger.info("Successfully generated emotion-tagged version")
+        except Exception as e:
+            logger.error(f"Failed to generate emotion tags: {str(e)}")
+            # Continue without emotion tags if it fails
+            emotion_tagged_story = result["story"]
+
         # Generate images if requested
         images = []
         if data.get('generate_images', False):
@@ -222,7 +252,8 @@ def generate_story_endpoint():
 
         return jsonify({
             "story_id": story_id,
-            "story_text": result["story"],
+            "story_text": result["story"],  # Clean version for display
+            "emotion_tagged_text": emotion_tagged_story,  # Version with emotion tags for TTS
             "profile_used": data['profile_type'],
             "generation_time": generation_time,
             "cached": False,

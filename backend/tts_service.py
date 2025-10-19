@@ -18,35 +18,35 @@ if not ELEVENLABS_API_KEY:
 client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
 
 # Voice mapping based on mood and theme for children's stories
-# Using ElevenLabs pre-made voices optimized for storytelling
+# Using ElevenLabs premium natural-sounding voices
 VOICE_PROFILES = {
     # Calm, gentle voices
     "calm": {
-        "default": "EXAVITQu4vr4xnSDxMaL",  # Sarah - warm, soothing female
-        "space": "pNInz6obpgDQGcFmaJgB",    # Adam - calm, clear narrator
-        "animals": "EXAVITQu4vr4xnSDxMaL",  # Sarah - gentle for animal stories
-        "adventure": "Xb7hH8MSUJpSbSDYk0k2", # Alice - soft adventure voice
+        "default": "21m00Tcm4TlvDq8ikWAM",  # Rachel - warm, natural storytelling voice
+        "space": "29vD33N1CtxCmqQRPOHJ",    # Drew - calm, soothing narrator
+        "animals": "21m00Tcm4TlvDq8ikWAM",  # Rachel - gentle for animal stories
+        "adventure": "oWAxZDx7w5VEj9dCyTzz", # Grace - soft, expressive
     },
     # Playful, energetic voices
     "playful": {
-        "default": "ThT5KcBeYPX3keUQqHPh",  # Dorothy - bright, cheerful
-        "space": "pNInz6obpgDQGcFmaJgB",    # Adam - enthusiastic explorer
-        "animals": "ThT5KcBeYPX3keUQqHPh",  # Dorothy - fun, animated
-        "adventure": "N2lVS1w4EtoT3dr4eOWO",  # Callum - energetic storyteller
+        "default": "AZnzlk1XvdvUeBnXmlld",  # Domi - bright, cheerful, young-sounding
+        "space": "VR6AewLTigWG4xSOukaG",    # Arnold - enthusiastic, clear
+        "animals": "AZnzlk1XvdvUeBnXmlld",  # Domi - fun, animated
+        "adventure": "ErXwobaYiN019PkySvjV",  # Antoni - energetic storyteller
     },
     # Curious, wondering voices
     "curious": {
-        "default": "Xb7hH8MSUJpSbSDYk0k2", # Alice - curious, thoughtful
-        "space": "pNInz6obpgDQGcFmaJgB",    # Adam - scientific wonder
-        "animals": "EXAVITQu4vr4xnSDxMaL",  # Sarah - gentle curiosity
-        "adventure": "Xb7hH8MSUJpSbSDYk0k2", # Alice - exploratory
+        "default": "oWAxZDx7w5VEj9dCyTzz", # Grace - curious, warm
+        "space": "VR6AewLTigWG4xSOukaG",    # Arnold - scientific wonder
+        "animals": "21m00Tcm4TlvDq8ikWAM",  # Rachel - gentle curiosity
+        "adventure": "oWAxZDx7w5VEj9dCyTzz", # Grace - exploratory
     },
     # Brave, confident voices
     "brave": {
-        "default": "pNInz6obpgDQGcFmaJgB",  # Adam - strong, confident
-        "space": "pNInz6obpgDQGcFmaJgB",    # Adam - heroic explorer
-        "animals": "N2lVS1w4EtoT3dr4eOWO",  # Callum - brave adventurer
-        "adventure": "N2lVS1w4EtoT3dr4eOWO", # Callum - courageous hero
+        "default": "29vD33N1CtxCmqQRPOHJ",  # Drew - strong, confident
+        "space": "VR6AewLTigWG4xSOukaG",    # Arnold - heroic explorer
+        "animals": "ErXwobaYiN019PkySvjV",  # Antoni - brave adventurer
+        "adventure": "ErXwobaYiN019PkySvjV", # Antoni - courageous hero
     },
 }
 

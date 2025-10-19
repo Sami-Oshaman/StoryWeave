@@ -151,7 +151,8 @@ export const generateStory = async (profile, storyParams, imageConfig = null) =>
     console.log(`   Story length: ${data.story_text?.length} characters`);
 
     return {
-      story: data.story_text,
+      story: data.story_text,  // Clean version for display
+      emotionTaggedStory: data.emotion_tagged_text || data.story_text,  // Version with emotion tags for TTS
       images: data.images || [],
       metadata: {
         profile_type: data.profile_used,
